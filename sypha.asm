@@ -8777,7 +8777,7 @@ DATA_F5BB:
 
 
 
-
+STA APU_NoiseLoop
 
 LDA DATA_F731,Y
 STA APU_NoiseVolume
