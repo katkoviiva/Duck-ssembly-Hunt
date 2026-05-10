@@ -71,7 +71,7 @@ JSR CODE_F581
 
 
 
-CODE_C061:
+
 
 BEQ CODE_C06B
 
@@ -82,7 +82,7 @@ BNE CODE_C06E
 CODE_C06B:
 
 
-CODE_C06E:
+CODE_C061:
 
 
 
@@ -93,10 +93,22 @@ CODE_C06E:
 
 LOOP_C07C:
 
-BNE CODE_C061
+CODE_C06E:
 
 
 JMP LOOP_C07C
+
+
+
+
+
+
+
+BNE CODE_C061
+
+
+
+
 
 NMI_C086:
 PHP
@@ -162,11 +174,10 @@ PHA
 
 
 
-
 CODE_C0E1:
 
 
-
+DEX
 BPL CODE_C0E1
 
 
@@ -186,18 +197,11 @@ JMP CODE_C112
 CODE_C0FF:
 
 
-
-
-
-
-
-
-
-
-
-
-
 CODE_C112:
+
+
+
+
 
 
 
@@ -215,188 +219,184 @@ CODE_C11E:
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+CODE_C123:
+LDA GameplayMode
 JSR ExecutePointers_C35E
+
+dw InitGameplay_C81D
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+dw WaitForGameplayModeChange_C625
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+CODE_C176:
+LDA #GameplayMode_InitGameplay
+STA TitleScreenFlag
+STA GameplayMode
+
+
+
+JSR QueueSFX_Silence_D4E2
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+E
 
 dw InitTitleScreen_C5AA
 dw DoNothing_C5E0
@@ -759,9 +759,9 @@ DrawStripeImage_C3B8:
 
 
 
-
-
-
+WriteScreenUpdateToBuffer_C3CE:
+LDA #$00
+STA BGTileBuffer_WriteFlag
 
 
 
@@ -1252,6 +1252,7 @@ STA NMIFunctionsDisableFlag
 RTS
 
 
+WaitForGameplayModeChange_C625:
 
 
 
@@ -1284,7 +1285,15 @@ RTS
 
 
 
+ClearZeroPageVariables_C641:
+LDA #$00
+LDX #$30
 
+LOOP_C645:
+STA $00,X
+INX
+BNE LOOP_C645
+RTS
 
 
 
@@ -1655,19 +1664,10 @@ RTS
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+InitGameplay_C81D:
+JSR ClearZeroPageVariables_C641
+JSR WaitForNMI_C5D9
+JSR ClearScreenAndAttributesInit_C22B
 
 
 
@@ -4040,21 +4040,49 @@ INY
 
 
 
+CODE_D4AB:
+CMP #$05
+BNE CODE_D4CF
 
+LDA $0C
+STA BGTileBuffer_Transfer+33
 
-
-
-
-
-
-
-
+LDA $0D
+STA BGTileBuffer_Transfer+34
 
 
 CODE_D4BC:
 LDX #68
 LDA #$24
 
+CODE_D4C0:
+STA BGTileBuffer_Transfer+1,X
+DEX
+BPL CODE_D4C0
+
+
+
+
+
+
+
+CODE_D4CF:
+LDY #$00
+LDA ($14),Y
+
+
+
+
+
+
+
+
+
+
+
+QueueSFX_Silence_D4E2:
+LDA #SFX_Queue1_Silence
+BNE CODE_D500
 
 
 
@@ -4083,38 +4111,10 @@ LDA #$24
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+CODE_D500:
+ORA Sound_SFX1Queue
+STA Sound_SFX1Queue
+RTS
 
 
 
@@ -8091,20 +8091,21 @@ db StripeImageWriteCommand_Stop
 
 SetupSoundChannel_Square1_F35E:
 LDA #<APU_Square1DutyAndVolume
+BEQ SetupSoundChannel_F36C
 
+SetupSoundChannel_Triangle_F362:
+LDA #<APU_TriangleLinearCounter
+BNE SetupSoundChannel_F36C
 
+SetupSoundChannel_Noise_F366:
+LDA #<APU_NoiseVolume
+BNE SetupSoundChannel_F36C
 
+SetupSoundChannel_Square2_F36A:
+LDA #<APU_Square2DutyAndVolume
 
-
-
-
-
-
-
-
-
-
-
+SetupSoundChannel_F36C:
+STA $F4
 
 
 
@@ -8217,11 +8218,18 @@ DATA_EF2D:
 
 
 
+LDA #<CODE_F423
 
 
 
 
 
+CODE_F423:
+LDY $D0
+INC $D0
+LDA (Sound_SFX2DataPointer),Y
+BEQ CODE_F443
+JMP CODE_F51C
 
 
 
@@ -8238,6 +8246,7 @@ DATA_EF2D:
 
 
 
+CODE_F443:
 
 
 
@@ -8287,15 +8296,6 @@ DATA_EF2D:
 
 
 
-
-
-
-
-SetupSoundChannel_Square2_F36A:
-LDA #<APU_Square2DutyAndVolume
-
-SetupSoundChannel_F36C:
-STA $F4
 
 
 
@@ -8397,6 +8397,29 @@ BNE CODE_F451
 
 
 
+RETURN_F51B:
+RTS
+
+CODE_F51C:
+TAY
+CMP #$FF
+BEQ CODE_F52A
+AND #$C0
+CMP #$C0
+BEQ CODE_F536
+JMP ($0610)
+
+CODE_F52A:
+LDA $E0,X
+BEQ CODE_F541
+
+DEC $E0,X
+
+
+
+
+
+CODE_F536:
 
 
 
@@ -8404,30 +8427,7 @@ BNE CODE_F451
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+CODE_F541:
 
 
 
@@ -8457,6 +8457,32 @@ CODE_F451:
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+CODE_F581:
+LDA #>CODE_F423
+STA $0613
+STA $0611
+RTS
 
 
 
@@ -8655,32 +8681,6 @@ LDX #<APU_Square1DutyAndVolume
 
 
 
-CODE_F581:
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -8777,7 +8777,7 @@ DATA_F5BB:
 
 
 
-STA APU_NoiseLoop
+
 
 LDA DATA_F731,Y
 STA APU_NoiseVolume
