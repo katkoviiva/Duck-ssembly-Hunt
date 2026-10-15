@@ -161,9 +161,9 @@ CODE_C0BA:
 
 
 
-BEQ CODE_C0FF                                               ;unpause
-CPY #GameplayMode_DuckGameMain                              ;shooting ducks
-BEQ CODE_C0DF                                               ;can pause
+
+
+
 CPY #GameplayMode_RoundEnd_DuckGame                         ;and at the end of a round
 BEQ CODE_C0DF                                               ;can pause
 CPY #GameplayMode_ClayShootingMain                          ;shooting clay pigeons
@@ -1618,48 +1618,48 @@ STA BGTileBuffer_Transfer+1,X                               ;tens
 INX                                                         ;
 
 CODE_C7E1:
-LDA CurrentRound                                            ;
-AND #$0F                                                    ;
-STA BGTileBuffer_Transfer+1,X                               ;ones
 
-LDX #$05
-LDY #$23
-JMP TransferBGWriteToBuffer_C71D                            ;
+
+
+
+
+
+
 
 ClayPigeonIntro_C7EF:
-LDA $9D
-BEQ CODE_C7F6
-JMP CODE_C7FB
+
+
+
 
 CODE_C7F6:
-LDA #GameplayMode_StartClayShooting
-STA GameplayMode
+
+
 RTS
 
 
 
 CODE_C7FB:
-LDA Timer_2B
-BNE RETURN_C81C
 
-LDY $9D
-BEQ RETURN_C81C
 
-LDA DATA_EC1F,Y
-CMP #$AA
-BEQ CODE_C818
-PHA
-INY
-LDA DATA_EC1F,Y
-STA Timer_2B
-INY
-STY $9D
-PLA
-JMP CODE_D46C
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 CODE_C818:
-LDA #$00
-STA $9D
+
+
 
 RETURN_C81C:
 RTS
@@ -1670,28 +1670,28 @@ JSR WaitForNMI_C5D9
 JSR ClearScreenAndAttributesInit_C22B                       ;prepare for transition...
 JSR InitVariablesAndOAM_D4D9
 
-LDX #GameplayMode_LoadDuckGame                              ;go to duck game...
-LDA TitleScreenChoice                                       ;
-STA SelectedGame                                            ;
-CMP #$02                                                    ;check if our choice was clay shooting or duck game
-BCC CODE_C836
 
-LDX #GameplayMode_LoadClayShooting                          ;...or go clay pigeon
+
+
+
+
+
+
 
 CODE_C836:
-STX GameplayMode
+
 RTS
 
 LoadDuckGame_C839:
-JSR WaitForNMI_C5D9
+
 
 DrawStripeImage Layout_DuckGame_E042
 
-LDA #LoadPalette_DuckGame
-STA PaletteToLoad
 
-LDA #$02
-STA GameplayMode
+
+
+
+
 
 JSR UpdateCameraPosition_C3C1
 JSR EnableRender_C5EE
@@ -5034,29 +5034,29 @@ STA $0F
 JMP CODE_D991
 
 CODE_D9E2:
-LDA $50
-CMP #$FF
-BNE RETURN_D9F5
 
-LDA $53
-CMP #$FF
-BNE RETURN_D9F5
 
-JSR SpawnScoreSprite_CFF9
 
-LDA #$08
-STA CurrentEntity_State
+
+
+
+
+
+
+
+
+
 
 RETURN_D9F5:
 RTS
 
 CODE_D9F6:
-LDA $57
-AND #$03
-STA $1B
 
-LDA $0E
-JSR ExecutePointers_C35E
+
+
+
+
+
 
 dw DoNothing_C5E0                                           ;unused
 dw CODE_DA21
@@ -5076,122 +5076,122 @@ dw CODE_DA90
 dw CODE_DA9A
 
 CODE_DA21:
-LDA $0F
-JSR CODE_DAB5
+
+
 
 CODE_DA26:
-LDA $0C
-JSR InvertValue_D12B
-JMP CODE_DAA5
+
+
+
 
 CODE_DA2E:
-LDA $1B
-BEQ CODE_DA26
 
-JSR CODE_DA26
-JMP CODE_DA40
+
+
+
+
 
 CODE_DA38:
-LDA $0F
-JSR InvertValue_D12B
-JSR CODE_DAA5
+
+
+
 
 CODE_DA40:
-LDA $0C
-JMP CODE_DAB5
+
+
 
 CODE_DA45:
-JSR CODE_DA40
+
 
 CODE_DA48:
-LDA $0F
-JMP CODE_DAA5
+
+
 
 CODE_DA4D:
-LDA $1B
-BEQ CODE_DA48
-JSR CODE_DA5C
-JMP CODE_DA40
+
+
+
+
 
 CODE_DA57:
-LDA $0F
-JSR CODE_DAB5
+
+
 
 CODE_DA5C:
-LDA $0C
-JMP CODE_DAA5
+
+
 
 CODE_DA61:
-LDA $0F
-JSR InvertValue_D12B
-JSR CODE_DAB5
-JMP CODE_DA5C
+
+
+
+
 
 CODE_DA6C:
-LDA $1B
-BEQ CODE_DA48
 
-LDA $0C
-JSR CODE_DAA5
+
+
+
+
 
 CODE_DA75:
-LDA $0C
-JSR InvertValue_D12B
-JMP CODE_DAB5
+
+
+
 
 CODE_DA7D:
-LDA $0F
-JSR CODE_DAA5
-JMP CODE_DA75
+
+
+
 
 CODE_DA85:
-JSR CODE_DA75
+
 
 CODE_DA88:
-LDA $0F
-JSR InvertValue_D12B
-JMP CODE_DAA5
+
+
+
 
 CODE_DA90:
-LDA $1B
-BEQ CODE_DA88
-JSR CODE_DA75
-JMP CODE_DA26
+
+
+
+
 
 CODE_DA9A:
-LDA $0F
-JSR InvertValue_D12B
-JSR CODE_DAB5
-JMP CODE_DA26
+
+
+
+
 
 CODE_DAA5:
-CLC
-ADC $60,X
-CMP #$07
-BCC CODE_DAB0
-CMP #$C7
-BCC CODE_DAB2
+
+
+
+
+
+
 
 CODE_DAB0:
-LDA #$00
+
 
 CODE_DAB2:
-STA $60,X
+
 RTS
 
 CODE_DAB5:
-CLC
-ADC $61,X
-CMP #$07
-BCC CODE_DAC0
-CMP #$F8
-BCC CODE_DAC2
+
+
+
+
+
+
 
 CODE_DAC0:
-LDA #$00
+
 
 CODE_DAC2:
-STA $61,X
+
 RTS
 
 ;pointers to sprite images
@@ -8090,94 +8090,94 @@ db $30                                                      ;unused
 ;A - sound register offset
 ;X,Y - pointer to get sound data from, low and high bytes respectively
 SetupSoundChannel_Square1_F35E:
-LDA #<APU_Square1DutyAndVolume                              ;
-BEQ SetupSoundChannel_F36C                                  ;
+
+
 
 SetupSoundChannel_Triangle_F362:
-LDA #<APU_TriangleLinearCounter                             ;
-BNE SetupSoundChannel_F36C                                  ;
+
+
 
 SetupSoundChannel_Noise_F366:
-LDA #<APU_NoiseVolume                                       ;
-BNE SetupSoundChannel_F36C                                  ;
+
+
 
 SetupSoundChannel_Square2_F36A:
-LDA #<APU_Square2DutyAndVolume                              ;
+
 
 SetupSoundChannel_F36C:
-STA $F4
 
-LDA #>APU_ChannelRegister1
-STA $F5
-STX $F6
-STY $F7
 
-LDY #$00                                                    ;
+
+
+
+
+
+
 
 LOOP_F378:
-LDA ($F6),Y                                                 ;get sound data
-STA ($F4),Y                                                 ;store to sound register
-INY                                                         ;
-TYA                                                         ;
-CMP #$04                                                    ;stop after all 4 registers have been stored to
-BNE LOOP_F378                                               ;
+
+
+
+
+
+
 RTS                                                         ;
 
 ;init something, sample?
 InitSpecialSound_F383:
-STA Sound_CurrentSFX2ID
 
-LDA FanfareHeaders_F846,Y                                   ;headers!!
-TAY
 
-LDA FanfareHeaders_F846,Y
-STA Sound_NoteLengthOffset
 
-LDA FanfareHeaders_F846+1,Y
-STA Sound_SFX2DataPointer
 
-LDA FanfareHeaders_F846+2,Y
-STA Sound_SFX2DataPointer+1
 
-LDA FanfareHeaders_F846+3,Y                                 ;another pointer
-STA $FA
 
-LDA FanfareHeaders_F846+4,Y
-STA $FB
 
-LDA FanfareHeaders_F846+5,Y                                 ;another pointer
-STA $FC
 
-LDA FanfareHeaders_F846+6,Y
-STA $FD
 
-LDA FanfareHeaders_F846+7,Y                                 ;one. more. pointer.
-STA $FE
 
-LDA FanfareHeaders_F846+8,Y
-STA $FF
 
-LDA #$01
-STA $D8
-STA $D9
-STA $DA
-STA $DB
 
-LDA #$00
-STA $F3
-STA $D0
-STA $D1
-STA $D2
-STA $D3
-STA APU_DMCLoadCounter
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 RTS
 
 CODE_F3D0:
-LDA #$7F
-STA APU_ChannelRegister2
-STA APU_Square2Sweep
-STX $E9
-STY $EA
+
+
+
+
+
 RTS
 
 DATA_F3DD:
@@ -8210,74 +8210,74 @@ db $40,$05,$02,$C0
 
 
 CODE_F40F:
-LDA $F9
-BEQ CODE_F451
 
-DEC $D8
-BNE CODE_F451
 
-LDX #$00
 
-LDA #<CODE_F423
-STA $0612
 
-LDA #<CODE_F42E
-STA $0610
+
+
+
+
+
+
+
+
+
 
 CODE_F423:
-LDY $D0
-INC $D0
-LDA (Sound_SFX2DataPointer),Y
-BEQ CODE_F443                                               ;check if reached the end
-JMP CODE_F51C
+
+
+
+
+
 
 CODE_F42E:
-TYA
-BPL CODE_F43A
 
-JSR ProcessLengthData_F544
-LDY $D0
-INC $D0
-LDA (Sound_SFX2DataPointer),Y
+
+
+
+
+
+
 
 CODE_F43A:
-JSR SetSquare1Frequency_F550
-BNE CODE_F448
-LDY #$10
-BNE CODE_F44A
+
+
+
+
 
 CODE_F443:
-LDA #$00
-JMP SilenceSoundChannels_F68C
+
+
 
 CODE_F448:
-LDY $E9
+
 
 CODE_F44A:
-STY APU_ChannelRegister1
-LDA $DC
-STA $D8
+
+
+
 
 CODE_F451:
-LDA $FB
-BEQ CODE_F47E
-DEC $D9
-BNE CODE_F47E
-LDX #$01
-LDY $D1
-INC $D1
-LDA ($FA),Y
-BPL CODE_F46C
-JSR ProcessLengthData_F544
-LDY $D1
-INC $D1
-LDA ($FA),Y
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 CODE_F46C:
-JSR SetSquare2Frequency_F564
-BNE CODE_F475
-LDY #$10
-BNE CODE_F477
+
+
+
+
 
 CODE_F475:
 
@@ -8508,6 +8508,38 @@ GetDMCSampleLocation DMCSample_DuckQuack_FD00				;
 PlayBarkSample_F5A2:
 
 GetDMCSampleLocation DMCSample_DogBark_FB00					;
+
+
+;A - sample size
+;X - sample location
+;Y - sample Frequency
+LoadDMCSample_F5A8:
+
+
+
+
+
+
+RTS
+
+DATA_F5B7:
+db $9F,$7F,$60,$00
+
+DATA_F5BB:
+db $9F,$7F,$61,$00
+
+PlayDogLaugh_F5BF:
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -8858,7 +8890,7 @@ CODE_F7CC:
 
 
 
-RTS                                                         ;
+RTS
 
 CODE_F7FA:
 
@@ -8903,8 +8935,8 @@ CODE_F826:
 
 
 
-CODE_F82F:
 
+CODE_F82F:
 
 
 
