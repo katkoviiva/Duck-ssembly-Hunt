@@ -333,32 +333,32 @@ LDA #BGTile_Empty                                           ;empty tile
 LDX #$04                                                    ;
 
 CODE_C1C8:
-STA BGTileBuffer_Transfer+1,X
-DEX
-BPL CODE_C1C8
 
-LDA TitleScreenChoice                                       ;draw cursor where it belongs
-ASL A                                                       ;
-TAX                                                         ;
-LDA #BGTile_Cursor                                          ;
-STA BGTileBuffer_Transfer+1,X                               ;
 
-LDX #$26                                                    ;
-LDY #$22                                                    ;
-JSR TransferBGWriteToBuffer_C71D                            ;
 
-LDA TitleScreenChoice                                       ;show the top score for the respective game choice
-ASL A                                                       ;
-ASL A                                                       ;
-CLC                                                         ;
-ADC #$03                                                    ;
-TAX                                                         ;
-LDY #$05                                                    ;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 CODE_C1EA:
-LDA TopScoreTable,X
-AND #$0F
-STA BGTileBuffer_Transfer+1,Y
+
+
+
 
 DEY
 LDA TopScoreTable,X
