@@ -15,20 +15,20 @@ CLD															;standard initialization. decimal mode
 SEI															;interrupt
 
 LOOP_C002:
+LDA HardwareStatus                                          ;
+BPL LOOP_C002                                               ;wait for NES power on...
 
+LDX #$00                                                    ;
+STX ControlBits                                             ;init NES registers
+STX RenderBits                                              ;
 
+DEX                                                         ;
+TXS                                                         ;init stack
 
+LDX RNG_Value                                               ;RNG seed
 
-
-
-
-
-
-
-
-
-
-
+LDY #$06                                                    ;only clear $0000-$06FF
+STY $01                                                     ;
 
 
 
@@ -164,44 +164,44 @@ CODE_C0BA:
 
 
 
-CPY #GameplayMode_RoundEnd_DuckGame                         ;and at the end of a round
-BEQ CODE_C0DF                                               ;can pause
-CPY #GameplayMode_ClayShootingMain                          ;shooting clay pigeons
-BEQ CODE_C0DF                                               ;can pause
-CPY #GameplayMode_RoundEnd_ClayShooting                     ;and at the end of a round
-BNE CODE_C123                                               ;can pause
+
+
+
+
+
+
 
 CODE_C0DF:
 
 
 CODE_C0E1:
-LDA Timer_Base,X                                            ;back up timers
-STA Timer_Backup,X                                          ;
-DEX                                                         ;
-BPL CODE_C0E1                                               ;
 
-LDA RenderMirror                                            ;disable sprite display
-AND #$0E                                                    ;
-STA RenderBits                                              ;
-STA RenderMirror                                            ;
 
-LDA GameplayMode                                            ;
-STA GameplayMode_Backup                                     ;
 
-LDA #GameplayMode_Pause                                     ;
-STA GameplayMode                                            ;pause game mode
 
-LDA #Message_PAUSE                                          ;
-JMP CODE_C112                                               ;will display pause message
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 CODE_C0FF:
-LDA RenderMirror                                            ;enable sprites
-ORA #$10                                                    ;
-STA RenderBits                                              ;
-STA RenderMirror                                            ;
 
-LDA #GameplayMode_Unpause                                   ;
-STA GameplayMode                                            ;
+
+
+
+
+
+
 
 
 
@@ -297,40 +297,40 @@ CODE_C190:
 
 
 CODE_C199:
-LDY TitleScreenChoice                                       ;
-INY                                                         ;go to next choice
-CPY #$03                                                    ;handle wrap around
-BNE CODE_C1A3                                               ;
+
+
+
+
 
 
 
 CODE_C1A3:
-STY TitleScreenChoice                                       ;update title screen choice
-JMP CODE_C1B2
+
+
 
 CODE_C1A9:
-CMP #$00                                                    ;holding anything else?
-BNE CODE_C1B2                                               ;
-STA SelectHeldFlag                                          ;clear this flag.
-BEQ CODE_C1BB
+
+
+
+
 
 CODE_C1B2:
-LDA #$01                                                    ;
-STA SelectHeldFlag                                          ;pressed select don't change option again until repress.
+
+
 
 CODE_C1B7:
-LDA #$FF                                                    ;255*10 frames
-STA Timer_2D
+
+
 
 CODE_C1BB:
-CPX #$01
-BNE CODE_C217
 
-LDA #$51                                                    ;5 rows with 1 tile each
-STA BGTileBuffer_Transfer
 
-LDA #BGTile_Empty                                           ;empty tile
-LDX #$04                                                    ;
+
+
+
+
+
+
 
 CODE_C1C8:
 
@@ -339,6 +339,7 @@ CODE_C1C8:
 
 
 
+                                                
 
 
 
@@ -360,216 +361,216 @@ CODE_C1EA:
 
 
 
-DEY
-LDA TopScoreTable,X
-LSR A
-LSR A
-LSR A
-LSR A
-STA BGTileBuffer_Transfer+1,Y
-DEX
-DEY
-BPL CODE_C1EA
 
-LDA BGTileBuffer_Transfer+1                                 ;if hundred thousands is a 0, omit it
-BNE CODE_C20B                                               ;
 
-LDA #BGTile_Empty                                           ;
-STA BGTileBuffer_Transfer+1                                 ;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 CODE_C20B:
-LDA #$16                                                    ;6 tiles on a single row
-STA BGTileBuffer_Transfer                                   ;
 
-LDX #$12                                                    ;
-LDY #$23                                                    ;
-JSR TransferBGWriteToBuffer_C71D                            ;
+
+
+
+
+
 
 CODE_C217:
-LDA Timer_2D
-BNE CODE_C222                                               ;will play title theme again after a while
 
-JSR QueueSFX_TitleTheme_D509
 
-LDA #$FF
-STA Timer_2D
+
+
+
+
+
 
 CODE_C222:
-LDA TitleScreenMode                                         ;
-JSR ExecutePointers_C35E                                    ;
+
+
 
 dw InitTitleScreen_C5AA                                     ;
 dw DoNothing_C5E0                                           ;
 
 ;screen clearing stuff
 ClearScreenAndAttributesInit_C22B:
-LDA #$02                                                    ;
-JSR CODE_C232                                               ;
+
+
 
 ClearScreenInit_C230:
-LDA #$01                                                    ;
+
 
 CODE_C232:
-STA $01                                                     ;
 
-LDA #BGTile_Empty                                           ;
-STA $00                                                     ;
-JMP ClearScreen_C303                                        ;
+
+
+
+
 
 ClearOAM_C23B:
-LDY #$00                                                    ;
-LDA #$F4                                                    ;
+
+
 
 CODE_C23F:
-STA OAM_Y,Y                                                 ;
-INY                                                         ;
-INY                                                         ;
-INY                                                         ;
-INY                                                         ;
-BNE CODE_C23F                                               ;
+
+
+
+
+
+
 RTS                                                         ;
 
 UpdatePalette_C249:
-LDY PaletteToLoad                                           ;check if we should alter the palette
-BEQ RETURN_C262                                             ;if not updating palette... not updating palette. i think.
-DEY                                                         ;
-TYA                                                         ;
-ASL A                                                       ;calculate pointer
-TAY                                                         ;
-LDA POINTERS_E532,Y                                         ;get a pointer for what palette we're going to apply
-LDX POINTERS_E532+1,Y                                       ;
 
-LDY #LoadPalette_None                                       ;
-STY PaletteToLoad                                           ;reset the flag
+
+
+
+
+
+
+
+
+
+
 
 CODE_C25B:
-STA $00                                                     ;
-STX $01                                                     ;
-JSR DrawStripeImage_C3B8                                    ;update palette
+
+
+
 
 RETURN_C262:
 RTS
 
 ;using stripe format, uploads palette for ducks
 UpdateDuckPalette_C263:
-LDY DuckPaletteLoadFlag                                     ;should we update duck palettes?
-BEQ RETURN_C262                                             ;return if not
 
-LDY #$00                                                    ;
-STY DuckPaletteLoadFlag                                     ;we're doing it          
 
-LDA #<DuckPaletteStorage                                    ;
-LDX #>DuckPaletteStorage                                    ;
-BNE CODE_C25B                                               ;let's upload them
+
+
+          
+
+
+
+
 
 UnpauseGame_C271:
-DEC UnpauseTimer                                            ;check if we should stop
-BNE RETURN_C283                                             ;
 
-LDX #$05                                                    ;
+
+
+
 
 LOOP_C277:
-LDA Timer_Backup,X                                          ;restore timers
-STA Timer_Base,X                                            ;
-DEX                                                         ;
-BPL LOOP_C277                                               ;
 
-LDA GameplayMode_Backup                                     ;
-STA GameplayMode                                            ;
+
+
+
+
+
+
 
 RETURN_C283:
 RTS                                                         ;
 
 ReadControllers_C284:
-LDX #$01                                                    ;\prepare controller 2 for reading
-STX ControllerReg                                           ;/
-DEX                                                         ;\prepare controller 1 for reading
-STX ControllerReg                                           ;/
 
-JSR CODE_C291                                               ;get inputs from controller 1
-INX                                                         ;then second one
+
+
+
+
+
+
 
 CODE_C291:
-LDY #$08                                                    ;8 bits, of course
+
 
 LOOP_C293:
-PHA                                                         ;
-LDA ControllerReg,X                                         ;load whatever bit
-STA $00                                                     ;store here
-LSR A                                                       ;get rid of the first bit
-ORA $00                                                     ;get rid of all bits but bit zero (that happens)
-LSR A                                                       ;
-PLA                                                         ;PLA doesn't make much sense in this context, because we are not loading A. Mario Bros. does DEX : TXA to get A
-ROL A                                                       ;"sum" active bits... I think
-DEY                                                         ;
-BNE LOOP_C293
 
-CMP ControllerInput,X                                       ;if not the same input...
-BNE CODE_C2B6                                               ;store it
 
-INC ControllerInput_Counter,X                               ;some kinda timer...
 
-LDY ControllerInput_Counter,X                               ;
-CPY #$05                                                    ;check if this counter had reached this value...
-BCC RETURN_C2BE                                             ;
-STA ControllerInput_Hold,X                                  ;updates every 6th frame
 
-JMP CODE_C2B9                                               ;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 CODE_C2B6:
-STA ControllerInput,X                                       ;store controller inputs
+
 
 CODE_C2B9:
-LDA #$00                                                    ;
-STA ControllerInput_Counter,X                               ;timer zero
+
+
 
 RETURN_C2BE:
 RTS                                                         ;
 
 BufferedDraw_C2BF:
-LDA BGTileBuffer_WriteFlag                                  ;flag for tile update
-BEQ RETURN_C302                                             ;obviously don't do that if not set
+
+
 
 Macro_SetWord BGTileBuffer, $00                             ;set buffer address as indirect address
 
-LDA ControlMirror                                           ;
-AND #$FB                                                    ;enable any of bits except for bits 0 and 1
-STA ControlBits                                             ;(which are related with nametables)
-STA ControlMirror                                           ;back them up
 
-LDX HardwareStatus                                          ;prepare for drawing
-LDY #$00                                                    ;initialize Y register
-BEQ CODE_C2F4                                               ;jump ahead
+
+
+
+
+
+
+
 
 LOOP_C2DB:
-STA VRAMPointerReg                                          ;set tile drawing position, high byte
 
-INY                                                         ;
-LDA ($00),Y                                                 ;
-STA VRAMPointerReg                                          ;
 
-INY                                                         ;
-LDA ($00),Y                                                 ;
-AND #$3F                                                    ;
-TAX                                                         ;set how many tiles to draw on a single line
+
+
+
+
+
+
+
+
 
 LOOP_C2EA:
-INY                                                         ;
-LDA ($00),Y                                                 ;now, tiles
-STA VRAMUpdateRegister                                      ;
-DEX                                                         ;
-BNE LOOP_C2EA                                               ;draw untill the end
 
-INY                                                         ;
+
+
+
+
+
+
 
 CODE_C2F4:
-LDA ($00),Y                                                 ;if it transferred all tile data from buffer addresses by hitting address with 0, return
-BNE LOOP_C2DB                                               ;
 
-LDA #$00                                                    ;
-STA BGTileBuffer_Offset                                     ;
-STA BGTileBuffer                                            ;
-STA BGTileBuffer_WriteFlag                                  ;end draw, reset flag
+
+
+
+
+
+
 
 RETURN_C302:
 RTS                                                         ;
@@ -587,97 +588,97 @@ RTS                                                         ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ClearScreen_C303:
-LDA HardwareStatus                                          ;ready to draw
-LDA ControlMirror                                           ;\
-AND #$FB                                                    ;|all bits except for nametable
-STA ControlBits                                             ;|
-STA ControlMirror                                           ;/
 
-LDA #$1C                                                    ;
-CLC                                                         ;
+
+
+
+
+
+
+
 
 CODE_C312:
-ADC #$04                                                    ;
 
-DEC $01                                                     ;calculate high byte of tile drawing starting point
-BNE CODE_C312                                               ;20, 24, 28, 2C
-STA $02                                                     ;VRAM location high byte
-STA VRAMPointerReg                                          ;
 
-LDA #$00                                                    ;tile drawing's position, low byte
-STA VRAMPointerReg                                          ;
 
-LDX #$04                                                    ;to effectively clear full screen, we need to go from 0 to 255 (dec) 4 times! which is 8 horizontal tile lines from the top right to the bottom left tile. that's how many 8x8 tiles to clear
-LDY #$00                                                    ;(technically not, as this also affects attributes that start after 2xBF, but they get cleared afterwards anyway)
-LDA $00                                                     ;load whatever valus is in there.
+
+
+
+
+
+
+
+
+
+
 
 LOOP_C328:
-STA VRAMUpdateRegister                                      ;\fill screen(s) with tiles
-DEY                                                         ;|
-BNE LOOP_C328                                               ;|
-DEX                                                         ;|
-BNE LOOP_C328                                               ;/
 
-LDA $02                                                     ;\calculate position of tile attribute data.
-ADC #$03                                                    ;|
-STA VRAMPointerReg                                          ;/
 
-LDA #$C0                                                    ;\attributes location, low byte
-STA VRAMPointerReg                                          ;/
 
-LDY #$40                                                    ;64 bytes of attributes
-LDA #$00                                                    ;zero 'em out
+
+
+
+
+
+
+
+
+
+
+
+
 
 LOOP_C341:
-STA VRAMUpdateRegister                                      ;\this loop clears tile attributes (y'know, 32x32 areas that contain palette data for each individual 16x16 in it tile)
-DEY                                                         ;|
-BNE LOOP_C341                                               ;|
+
+
+
 RTS                                                         ;/
 
 ;timer handler
 HandleGlobalTimers_C348:
-LDX #$01                                                    ;a couple of timers decrease every frame
-DEC Timer_Timing                                            ;
-BPL LOOP_C354                                               ;
 
-LDA #10                                                     ;some timers tick every 10 frames
-STA Timer_Timing                                            ;
 
-LDX #$03                                                    ;a couple more timers decrease every time Timer_Timing
+
+
+
+
+
+
 
 LOOP_C354:
-LDA Timer_Base+1,X                                          ;
-BEQ CODE_C35A                                               ;can only count down if non-zero
 
-DEC Timer_Base+1,X                                          ;tick tock
+
+
+
 
 CODE_C35A:
-DEX                                                         ;next timer
-BPL LOOP_C354                                               ;
+
+
 RTS                                                         ;
 
 ExecutePointers_C35E:
-STX $28                                                     ;\save X and Y (new addition since Mario Bros. (NES))
-STY $29                                                     ;/
 
-ASL A                                                       ;loaded value multiply by 2
-TAY                                                         ;turn into y
-INY                                                         ;and add 1 (to jump over jsr's bytes and load table values correctly)
-PLA                                                         ;pull our previous location that JSR pushed for us
-STA $14                                                     ;low byte
-PLA                                                         ;
-STA $15                                                     ;high byte
 
-LDA ($14),Y                                                 ;load new location from the table, low byte
-TAX                                                         ;
-INY                                                         ;increase Y for high byte
-LDA ($14),Y                                                 ;
-STA $15                                                     ;
-STX $14                                                     ;
 
-LDX $28                                                     ;reload X and Y
-LDY $29                                                     ;
-JMP ($0014)                                                 ;jump wherever
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;Layout building routine
@@ -697,54 +698,53 @@ LOOP_C37C:
 
 
 
-INY                                                         ;
-LDA ($00),Y                                                 ;
-ASL A                                                       ;bit 7 - vertical draw bit, test for it
-PHA                                                         ;
-LDA ControlMirror                                           ;
-ORA #$04                                                    ;enable drawing in a verical line
-BCS CODE_C392                                               ;if bit 7 enabled, will draw vertically
-AND #$FB                                                    ;do not enable it if vertical draw bit not set
+
+
+
+
+
+
+
+
 
 CODE_C392:
-STA ControlBits                                             ;
-STA ControlMirror                                           ;
-PLA                                                         ;
-ASL A                                                       ;now test for bit 6 - repeated draw (draw the same tile multiple times)
-BCC CODE_C39E                                               ;
-ORA #$02                                                    ;this will trigger the same tile draw loop, remember - we have shifted A left two times. if we return it back to where it belongs, this will set carry
-INY                                                         ;move on from drawing property to a tile array or value to repeat
+
+
+
+
+
+
+
 
 CODE_C39E:
-LSR A                                                       ;bits 5 through 0 - amount of data to process (unique tiles or tile repeats)
-LSR A                                                       ;
-TAX                                                         ;
+
+
+
 
 LOOP_C3A1:
-BCS CODE_C3A4                                               ;if the repeat draw bit was set, will draw the same tile
 
-INY                                                         ;draw the next tile from an array
+
+
 
 CODE_C3A4:
-LDA ($00),Y                                                 ;
-STA VRAMUpdateRegister                                      ;
-DEX                                                         ;
-BNE LOOP_C3A1                                               ;
 
-SEC                                                         ;
-TYA                                                         ;
-ADC $00                                                     ;update table pointer
-STA $00                                                     ;
 
-LDA #$00                                                    ;
-ADC $01                                                     ;high byte ofc
-STA $01                                                     ;
+
+
+
+
+
+
+
+
+
+
 
 DrawStripeImage_C3B8:
-LDX HardwareStatus                                          ;warm our arm up before drawing on canvas
-LDY #$00                                                    ;
-LDA ($00),Y                                                 ;check for stop command, which is 0
-BNE LOOP_C37C                                               ;non-zero = draw
+
+
+
+
 
 UpdateCameraPosition_C3C1:
 
@@ -844,37 +844,37 @@ RTS                                                         ;
 ;$07 - Tens and ones to add
 ;A - score address offset, where 0 - mario and 1 - luigi
 UpdateScore_C437:
-CLC                                                         ;
-ADC #$01                                                    ;
-AND #$0F                                                    ;does this mean that theoratically you can have more than 2 player scores? i don't know what ninty game allows for more than 2 and uses this same routine
-ASL A                                                       ;
-ASL A                                                       ;x4 to get correct score address
-TAX                                                         ;
 
-LDA $04                                                     ;0 - addition, non-zero - substraction
-BEQ CODE_C46A                                               ;
 
-LDA $C3,X                                                   ;whatever profanity this is.
-BEQ CODE_C46E                                               ;
+
+
+
+
+
+
+
+
+
+
 
 CODE_C447:
-CLC                                                         ;
-LDA CurrentScore+2,X                                        ;store original value before calculation into $03
-STA $03                                                     ;
 
-LDA $07                                                     ;
-JSR CounterAddition_C4BF                                    ;calculate tens and ones
-STA CurrentScore+2,X                                        ;
 
-LDA CurrentScore+1,X                                        ;
-STA $03                                                     ;
 
-LDA $06                                                     ;
-JSR CounterAddition_C4BF                                    ;now calculate hundreds and thousands
-STA CurrentScore+1,X                                        ;
 
-LDA CurrentScore,X                                          ;
-STA $03                                                     ;
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -891,59 +891,59 @@ CODE_C46E:
 
 
 
-LDA $07                                                     ;
-JSR CounterSubstraction_C4E0                                ;
-STA CurrentScore+2,X                                        ;
 
-LDA CurrentScore+1,X                                        ;
-STA $03                                                     ;
 
-LDA $06                                                     ;
-JSR CounterSubstraction_C4E0                                ;
-STA CurrentScore+1,X                                        ;
 
-LDA CurrentScore,X                                          ;
-STA $03                                                     ;
 
-LDA $05                                                     ;
-JSR CounterSubstraction_C4E0                                ;
-STA CurrentScore,X                                          ;
 
-LDA CurrentScore,X                                          ;this LDA isn't necessary?
-BNE CODE_C49C                                               ;
 
-LDA CurrentScore+1,X                                        ;
-BNE CODE_C49C                                               ;
 
-LDA CurrentScore+2,X                                        ;
-BEQ CODE_C4A2                                               ;
 
-CODE_C49C:
-BCS RETURN_C4BE                                             ;
 
-LDA CurrentScore-1,X                                        ;
-EOR #$FF                                                    ;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 CODE_C4A2:
-STA CurrentScore-1,X                                        ;
-SEC                                                         ;
-LDA #$00                                                    ;
-STA $03                                                     ;
 
-LDA CurrentScore+2,X                                        ;
-JSR CounterSubstraction_C4E0                                ;
-STA CurrentScore+2,X                                        ;
 
-LDA CurrentScore+1,X                                        ;
-JSR CounterSubstraction_C4E0                                ;
-STA CurrentScore+1,X                                        ;
 
-LDA CurrentScore,X                                          ;
-JSR CounterSubstraction_C4E0                                ;
-STA CurrentScore,X                                          ;
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 RETURN_C4BE:
-RTS                                                         ;
+RTS
 
 ;Calculate counter value, like score, addition
 ;Input:
@@ -953,30 +953,30 @@ RTS                                                         ;
 ;A - result
 ;Carry - if next calculation in this routine should have a +1 to the low digit
 CounterAddition_C4BF:
-JSR ExtractDigits_C502                                      ;
-ADC $01                                                     ;
-CMP #$0A                                                    ;if value less than A
-BCC CODE_C4CA                                               ;don't round
-ADC #$05                                                    ;by adding 6 (incluing carry)
+
+
+
+
+
 
 CODE_C4CA:
-CLC                                                         ;
-ADC $02                                                     ;
-STA $02                                                     ;
 
-LDA $03                                                     ;tens/thousands/ten thousands
-AND #$F0                                                    ;only care about left digit that can overflow
-ADC $02                                                     ;and additional ten/whatev
-BCC CODE_C4DB                                               ;overflow?
+
+
+
+
+
+
+
 
 CODE_C4D7:
-ADC #$5F                                                    ;+$60 because of the carry (need carry set to get there)
-SEC                                                         ;and +1 to the next digit calculation (so for example 90+20=110, which results in +1 to the hundreds address)
+
+
 RTS                                                         ;
 
 CODE_C4DB:
-CMP #$A0                                                    ;hundreds and etc?
-BCS CODE_C4D7                                               ;if so, round it to 0
+
+
 RTS                                                         ;otherwise return
 
 ;Calculate counter value, like score, substraction
@@ -987,28 +987,28 @@ RTS                                                         ;otherwise return
 ;Carry - if next calculation in this routine should have a -1 to the low digit
 CounterSubstraction_C4E0:
 JSR ExtractDigits_C502                                      ;
-SBC $01                                                     ;do some calculation for carry
-STA $01                                                     ;
-BCS CODE_C4F3                                               ;
-ADC #$0A                                                    ;decimal-ize, 10-1 = 9, not F
-STA $01                                                     ;
 
-LDA $02                                                     ;
-ADC #$0F                                                    ;
-STA $02                                                     ;
+
+
+
+
+
+
+
+
 
 CODE_C4F3:
-LDA $03                                                     ;
-AND #$F0                                                    ;
-SEC                                                         ;
-SBC $02                                                     ;
-BCS CODE_C4FF                                               ;
 
-ADC #$A0                                                    ;same decimal operation with high nibble
-CLC                                                         ;
+
+
+
+
+
+
+
 
 CODE_C4FF:
-ORA $01                                                     ;
+
 RTS                                                         ;
 
 ;extract two digits into two bytes
@@ -1019,44 +1019,44 @@ RTS                                                         ;
 ;$01 - right digit (00-0F)
 ;$02 - left digit (00-F0)
 ExtractDigits_C502:
-PHA                                                         ;
-AND #$0F                                                    ;
-STA $01                                                     ;save low digit
-PLA                                                         ;
-AND #$F0                                                    ;
-STA $02                                                     ;and high digit
 
-LDA $03                                                     ;calculate low digit of value we're about to calculate
-AND #$0F                                                    ;
-RTS                                                         ;
+
+
+
+
+
+
+
+
+
 
 ;this code is used to calculate difference between player score(s) and TOP score to potentially replace it
 ;Input $00 - low nibble is player score offset (bits 0-2 ONLY), high nibble - TOP score offset (#$10 is added to it, so if it's #$F0 it'll result in #$00)
 ;low nibble bit 3 - run through 2 player scores (if not set, can be used for single player games)
 UpdateTOPScore_C511:
-LDA #$00                                                    ;
-STA $04                                                     ;not quite sure what this is for yet
 
-CLC                                                         ;
-LDA $00                                                     ;the amount of high scores?
-ADC #$10                                                    ;
-AND #$F0                                                    ;$F0+$10 = $00, indicating 1 TOP score on screen
-LSR A                                                       ;
-LSR A                                                       ;
-TAY                                                         ;Y - TOP score offset (can support multiple TOP scores?)
 
-LDA $00                                                     ;X - players score offset
-AND #$07                                                    ;
-ASL A                                                       ;
-ASL A                                                       ;
-TAX                                                         ;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 LOOP_C526:
-LDA CurrentScore-1,Y                                        ;those unknown flags that are as unknown as ever
-BEQ CODE_C57C                                               ;
 
-LDA TopScore-1,X                                            ;those unknown flags 2: electric boogaloo
-BEQ CODE_C555                                               ;
+
+
+
+
 
 CODE_C52F:
 
@@ -1079,82 +1079,82 @@ CODE_C52F:
 
 
 
-LDA CurrentScore-1,Y                                        ;
-BNE CODE_C585                                               ;
 
-CODE_C555:
-LDA #$FF                                                    ;
-STA $04                                                     ;
-SEC                                                         ;
+
+
+
+
+
+
 
 CODE_C55A:
-TYA                                                         ;
-BNE RETURN_C57B                                             ;
-BCC CODE_C56F                                               ;
 
-LDA TopScore-1,X                                            ;unknown flags that I still have no clue what they are. seriously, what are these??
-STA CurrentScore-1                                          ;
 
-LDA TopScore,X                                              ;now this doesn't make any sense. in other games, this is done the other way around.
-STA CurrentScore                                            ;but in this game, current score gets stored to top score and then vice versa??? why is it so convoluted?
 
-LDA TopScore+1,X                                            ;
-STA CurrentScore+1                                          ;
 
-LDA TopScore+2,X                                            ;
-STA CurrentScore+2                                          ;
+
+
+
+
+
+
+
+
+
+
+
 
 CODE_C56F:
-LDA $00                                                     ;
-AND #$08                                                    ;
-BEQ RETURN_C57B                                             ;check if want to update top score by comparing with other score (multiplayer)
 
-DEX                                                         ;
-DEX                                                         ;
-DEX                                                         ;
-DEX                                                         ;
-BPL LOOP_C526                                               ;next score to check. naturally, this functionality is unused in this game
+
+
+
+
+
+
+
+
 
 RETURN_C57B:
 RTS                                                         ;
 
 CODE_C57C:
-LDA TopScore-1,X                                            ;
-BEQ CODE_C52F                                               ;
+
+
 
 CODE_C580:
-LDA CurrentScore-1,Y                                        ;
-BNE CODE_C555                                               ;
 
-CODE_C585:
-CLC                                                         ;
-BCC CODE_C55A                                               ;
+
+
+
+
+
 
 RNG_C588:
-LDA RNG_Value                                               ;
-AND #$02                                                    ;
-STA $07                                                     ;something to make it a little more "random"
 
-LDA RNG_Value+1                                             ;
-AND #$02                                                    ;
-EOR $07                                                     ;
-CLC                                                         ;
-BEQ CODE_C59A                                               ;if value isn't zero, don't set carry
-SEC                                                         ;
+
+
+
+
+
+
+
+
+
 
 CODE_C59A:
-ROR RNG_Value                                               ;
-ROR RNG_Value+1                                             ;
-ROR RNG_Value+2                                             ;
-ROR RNG_Value+3                                             ;
 
-LDA RNG_Value                                               ;output for some calls
-RTS                                                         ;
+
+
+
+
+
+RTS
 
 InitTitleScreen_C5AA:
 JSR DisableRender_C5E1                                      ;hide any evidence of us messing with the screen
 
-JSR ClearScreenInit_C230                                    ;
+
 JSR WaitForNMI_C5D9                                         ;after clearing screen, take a break
 
 
@@ -1165,9 +1165,9 @@ JSR WaitForNMI_C5D9                                         ;after clearing scre
 
 
 
+JSR WaitForNMI_C5D9                                         ;a deserved vacation after the hard work
 
 
-DrawStripeImage Layout_TitleScreen_E404                     ;draw title screen
 
 
 
@@ -1181,74 +1181,74 @@ DrawStripeImage Layout_TitleScreen_E404                     ;draw title screen
 
 ;a simple loop to take a break in
 WaitForNMI_C5D9:
-JSR PrepareForNMIWait_C61E
+JSR PrepareForNMIWait_C61E                                  ;
 
 LOOP_C5DC:
 
 
 
 DoNothing_C5E0:
-RTS                                                         ;do nothing. this comment is utterly redundant.
+RTS
 
 DisableRender_C5E1:
+JSR WaitForNMI_C5D9                                         ;wait before we can do it
 
 
-LDA RenderMirror                                            ;
 
 
 CODE_C5E8:
-STA RenderMirror                                            ;
-STA RenderBits                                              ;
+
+
 RTS                                                         ;
 
 EnableRender_C5EE:
+JSR WaitForNMI_C5D9                                         ;
 
 
-LDA RenderMirror                                            ;
-ORA #$18                                                    ;
-BNE CODE_C5E8                                               ;enable these bits
+
+
 
 ;input Y - entity variable offset for Entity_Variables
 GetCurrentEntityVariables_C5F7:
-STY CurrentEntity_MemoryOffset
 
-LDX #$00                                                    ;
+
+
 
 LOOP_C5FB:
-LDA Entity_Variables,Y                                      ;
-STA CurrentEntity_Variables,X                               ;
-INY                                                         ;
-INX                                                         ;
-CPX #Entity_Variables_Size                                  ;whopping 80 bytes of RAM for each entity.
-BNE LOOP_C5FB                                               ;
+
+
+
+
+
+
 RTS                                                         ;
 
 ;store from current entity variables to... entity variables. can move onto next entity or something.
 UpdateEntityVariables_C607:
-LDY CurrentEntity_MemoryOffset                              ;
-LDX #$00                                                    ;
+
+
 
 LOOP_C60B:
-LDA CurrentEntity_Variables,X                               ;
-STA Entity_Variables,Y                                      ;
-INY                                                         ;
-INX                                                         ;
-CPX #Entity_Variables_Size                                  ;
-BNE LOOP_C60B                                               ;
+
+
+
+
+
+
 RTS                                                         ;
 
 ;X - table location, low byte
 ;Y - table location, high byte
 DrawStripeImageInit_C617
-
-
-
+STX $00                                                     ;
+STY $01                                                     ;
+JMP DrawStripeImage_C3B8                                    ;
 
 ;clear NMI-related variables to make it so that NMI can run its code and alert us when its done
 PrepareForNMIWait_C61E:
-LDA #$00
-STA FrameFlag
-STA NMIFunctionsDisableFlag
+LDA #$00                                                    ;
+STA FrameFlag                                               ;
+STA NMIFunctionsDisableFlag                                 ;
 RTS                                                         ;
 
 ;change gameplay mode when the timer runs out
@@ -1266,356 +1266,356 @@ RTS                                                         ;
 ;X - gameplay mode to store after timer runs out
 ;A - amount of time to wait * 10
 StartTimedGameplayModeChange_C62E:
-STX GameplayMode_Delayed                                    ;
-STA Timer_2D                                                ;
 
-LDA #GameplayMode_WaitForGameplayModeChange                 ;
-STA GameplayMode                                            ;
-RTS                                                         ;
+
+
+
+
+RTS 
 
 ;clears RAM in range 0300-03FF (which includes entity variables)
 Clear0300Page_C637:
-LDY #$00                                                    ;
-TYA                                                         ;
+
+
 
 LOOP_C63A:
-STA $0300,Y
-INY                                                         ;
-BNE LOOP_C63A                                               ;
-RTS                                                         ;
+
+
+
+RTS  
 
 ;clears RAM $30-$FF
 ClearZeroPageVariables_C641:
-LDA #$00
-LDX #$30
+
+
 
 LOOP_C645:
-STA $00,X
-INX
-BNE LOOP_C645
+
+
+
 RTS
 
 ;clear RAM 40-BF
 ClearZeroPageVariablesLimited_C64B:
-LDA #$00
-LDX #$7F
+
+
 
 LOOP_C64F:
-STA $40,X
-DEX
-BPL LOOP_C64F
+
+
+
 RTS
 
 ;Puts each individual digit into buffer to update it later
 PutScoreIntoBuffer_C655:
-LDX #$03                                                    ;
-LDY #$05                                                    ;6 digits
+
+
 
 LOOP_C659:
-LDA CurrentScore-1,X                                        ;
-AND #$0F                                                    ;low digit
-STA BGTileBuffer_Transfer+1,Y                               ;
 
-DEY                                                         ;
-LDA CurrentScore-1,X                                        ;
-LSR A                                                       ;
-LSR A                                                       ;
-LSR A                                                       ;
-LSR A                                                       ;
-STA BGTileBuffer_Transfer+1,Y                               ;other digit
-DEX                                                         ;
-DEY                                                         ;
-BPL LOOP_C659                                               ;
 
-LDA #$16                                                    ;6 tiles on a single row
-STA BGTileBuffer_Transfer                                   ;
 
-LDX ScorePointerVRAMLoc_E5DB+1                              ;someone forgot about turning this table into an immediate value
-LDY ScorePointerVRAMLoc_E5DB                                ;
-JMP TransferBGWriteToBuffer_C71D                            ;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ;$0C - shape
 ;$B1 - vertical position
 ;$B2 - horizontal position
 DrawZapperShape_C67C:
-LDA $0C                                                     ;
-ASL A                                                       ;
-TAY                                                         ;
-LDA ZapperShapeSpriteGFXPointers_EB30,Y                     ;get shape pointer
-STA $10
 
-LDA ZapperShapeSpriteGFXPointers_EB30+1,Y                   ;
-STA $11                                                     ;
 
-LDY #$00                                                    ;
-LDX #$00                                                    ;
 
-LOOP_C68E:
-LDA ($10),Y                                                 ;
-CMP #$AA                                                    ;$AA is terminator for this routine
-BNE CODE_C695                                               ;
 
-RETURN_C694:
-RTS                                                         ;umm, I'm outta here!
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 CODE_C695:
-CLC
-ADC $B1
-CMP #$A8
-BCC CODE_C69E
 
-LDA #$F4                                                    ;offscreen
+
+
+
+
+
 
 CODE_C69E:
-STA $0D
 
-INY
-LDA ($10),Y
-CLC
-ADC $B2
-STA $0E
 
-INY
-LDA $0D                                                     ;vertical position
-STA OAM_Y,X
 
-INX                                                         ;
-LDA #$56                                                    ;square tile
-STA OAM_Tile-1,X                                            ;
 
-INX                                                         ;
-LDA #OAMProp_Palette0                                       ;
-STA OAM_Prop-2,X                                            ;
 
-INX
-LDA $0E
-STA OAM_X-3,X
 
-INX
-JMP LOOP_C68E
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 HandleHitTableVisualUpdate_C6C4:
-LDA HitCounterUpdateFlag                                    ;
-BEQ RETURN_C694                                             ;
 
-LDA #$00                                                    ;
-STA HitCounterUpdateFlag                                    ;
+
+
+
+
 
 DrawHitTable_C6CC:
-LDA #BGTile_Duck+1                                          ;
-LDY SelectedGame                                            ;check if we're playing with clay pigeons or real pigeons
-CPY #$02                                                    ;
-BNE CODE_C6D6                                               ;
 
-LDA #BGTile_ClayPigeon+1                                    ;
+
+
+
+
+
 
 CODE_C6D6:
-STA $0C                                                     ;remember the tile
 
-LDX #$09                                                    ;
+
+
 
 LOOP_C6DA:
-LDY $0C                                                     ;
-LDA HitTable,X                                              ;
-BEQ CODE_C6E2                                               ;
-DEY                                                         ;use filled tile if shot
+
+
+
+
 
 CODE_C6E2:
-TYA                                                         ;
-STA BGTileBuffer_Transfer+1,X                               ;
 
-DEX                                                         ;
-BPL LOOP_C6DA                                               ;
+
+
+
+
 
 CODE_C6E9:
-LDA #$1A                                                    ;a single row with 10 tiles
-STA BGTileBuffer_Transfer                                   ;
 
-LDX #$4C                                                    ;
-LDY #$23                                                    ;hit table is at $234C
-JMP TransferBGWriteToBuffer_C71D                            ;
+
+
+
+
+
 
 HandleBulletVisualUpdate_C6F5:
-LDA ShotCounterUpdateFlag                                   ;
-BEQ RETURN_C694                                             ;
 
-LDA #$00                                                    ;
-STA ShotCounterUpdateFlag                                   ;
 
-LDX ShotCount                                               ;
-LDY #$00                                                    ;
+
+
+
+
+
+
 
 LOOP_C701:
-CPX #$00                                                    ;
-BEQ CODE_C70A                                               ;check if ran out of bullets to draw. will draw spaces
-DEX                                                         ;
-LDA #BGTile_Bullet                                          ;draw a bullet
-BNE CODE_C70C                                               ;
+
+
+
+
+
 
 CODE_C70A:
-LDA #$B7                                                    ;blank space
+
 
 CODE_C70C:
-STA BGTileBuffer_Transfer+1,Y                               ;
-INY                                                         ;
-CPY #$03                                                    ;
-BNE LOOP_C701                                               ;
 
-LDA #$13                                                    ;
-STA BGTileBuffer_Transfer                                   ;
 
-LDX #$43                                                    ;
-LDY #$23                                                    ;
+
+
+
+
+
+
+
+
 
 ;X - VRAM location low byte
 ;Y - VRAM location high byte
 TransferBGWriteToBuffer_C71D:
-STX $00                                                     ;
-STY $01                                                     ;
 
-LDX #<BGTileBuffer_Transfer                                 ;
-LDY #>BGTileBuffer_Transfer                                 ;
-STX $02                                                     ;
-STY $03                                                     ;
-JMP WriteScreenUpdateToBuffer_C3CE                          ;
+
+
+
+
+
+
+
 
 GameOver_C72C:
-LDA Timer_2D
-BEQ CODE_C73A                                               ;just wait.
 
-LDA SelectedGame                                            ;check if current game is NOT clay pigeon game
-CMP #$02                                                    ;
-BEQ RETURN_C739                                             ;
-JMP HandleDogEntity_CC94                                    ;what the dog doin?
+
+
+
+
+
+
 
 RETURN_C739:
 RTS                                                         ;
 
 CODE_C73A:
-LDX #$03                                                    ;
+
 
 CODE_C73C:
-LDA CurrentScore-1,X                                        ;
-STA TopScore-1,X                                            ;
-DEX                                                         ;
-BPL CODE_C73C                                               ;
 
-LDA SelectedGame                                            ;
-ASL A                                                       ;
-ASL A                                                       ;
-TAY                                                         ;
-STY $0F                                                     ;
 
-LDX #$00                                                    ;
+
+
+
+
+
+
+
+
+
+
 
 LOOP_C74C:
-LDA TopScoreTable,Y                                         ;
-STA CurrentScore-1,X                                        ;in this context, current score is top score.
-INY                                                         ;
-INX                                                         ;
-CPX #$04                                                    ;
-BNE LOOP_C74C                                               ;
 
-LDA #$F0                                                    ;
-STA $00                                                     ;
-JSR UpdateTOPScore_C511                                     ;update top score for real
 
-LDY $0F
-LDX #$00
+
+
+
+
+
+
+
+
+
+
+
 
 LOOP_C762:
-LDA CurrentScore-1,X
-STA TopScoreTable,Y                                         ;update our table of scores
-INY                                                         ;
-INX                                                         ;
-CPX #$04                                                    ;
-BNE LOOP_C762                                               ;
 
-LDY #$00                                                    ;
-STY ZapperEnabledFlag                                       ;disable zapper for now
-STY TitleScreenMode                                         ;gonna load the title screen
-INY                                                         ;
-STY TitleScreenFlag                                         ;return to the title screen
 
-JMP DisableRender_C5E1                                      ;go to darkness
+
+
+
+
+
+
+
+
+
+
+
+
 
 InitGameOver_C779:
-JSR QueueSFX_GameOverTheme_D50D
-JSR WaitForNMI_C5D9                                         ;
 
-JSR QueueSFX_DogLaugh_D4FA                                  ;the game attempts to play dog laughter during game over. what happens next will shock you! nothing, because of sound priority.
+JSR WaitForNMI_C5D9
 
-LDA #$01
-STA Entity_Variables_ActiveFlag+(Entity_Variables_Size*2)   ;
-STA Entity_Variables_CurrentState+(Entity_Variables_Size*2) ;
 
-LDA #GameplayMode_GameOver                                  ;
-STA GameplayMode                                            ;
 
-LDA #$15
-STA Timer_2D
+
+
+
+
+
+
+
+
+
 RTS
 
 ;fill the bottom bar with required hits
 UpdateRequiredHits_C793:
-LDX #$0A                                                    ;
+
 
 LOOP_C795:
-CPX HitCountToWin                                           ;
-BCC CODE_C79F                                               ;if less or equal to the amount of kills necessary...
-BEQ CODE_C79F                                               ;will draw the stripe tile indicating a required hit
 
-LDA #$B7                                                    ;empty tile for the rest
-BNE CODE_C7A1                                               ;
+
+
+
+
+
 
 CODE_C79F:
-LDA #BGTile_PassLineTile                                    ;
+
 
 CODE_C7A1:
-STA BGTileBuffer_Transfer,X                                 ;
-DEX                                                         ;
-BNE LOOP_C795                                               ;
 
-LDA #$1A                                                    ;
-STA BGTileBuffer_Transfer                                   ;
 
-LDX #$6C                                                    ;
-LDY #$23                                                    ;
-JMP TransferBGWriteToBuffer_C71D                            ;
+
+
+
+
+
+
+
+
 
 ;add +1 to the round counter and queue it for drawing
 UpdateRoundNumber_C7B3:
-LDA CurrentRound                                            ;store current round number here for the calculation
-STA $03                                                     ;
 
-LDA #$01                                                    ;add 1
-CLC                                                         ;
-JSR CounterAddition_C4BF                                    ;
-STA CurrentRound                                            ;update
 
-LDA #$12                                                    ;1 row, 2 tiles
-STA BGTileBuffer_Transfer
 
-LDX #$DD                                                    ;which tile to use instead of the missing digit (ones)
-LDA SelectedGame                                            ;
-CMP #$02                                                    ;
-BEQ CODE_C7CE                                               ;use above tile for clay shooting
 
-LDX #$50                                                    ;use this tile for duck game
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 CODE_C7CE:
-STX BGTileBuffer_Transfer+2
 
-LDX #$00                                                    ;
-LDA CurrentRound                                            ;
-AND #$F0                                                    ;
-BEQ CODE_C7E1                                               ;if there are no tens, only one digit to draw
-LSR A                                                       ;
-LSR A                                                       ;
-LSR A                                                       ;
-LSR A                                                       ;
-STA BGTileBuffer_Transfer+1,X                               ;tens
-INX                                                         ;
+
+
+
+
+
+
+
+
+
+
+
 
 CODE_C7E1:
 
@@ -1665,10 +1665,10 @@ RETURN_C81C:
 RTS
 
 InitGameplay_C81D:
-JSR ClearZeroPageVariables_C641                             ;clear some essentials
-JSR WaitForNMI_C5D9
-JSR ClearScreenAndAttributesInit_C22B                       ;prepare for transition...
-JSR InitVariablesAndOAM_D4D9
+
+
+
+
 
 
 
@@ -1683,7 +1683,7 @@ CODE_C836:
 RTS
 
 LoadDuckGame_C839:
-
+JSR WaitForNMI_C5D9
 
 DrawStripeImage Layout_DuckGame_E042
 
@@ -1693,127 +1693,127 @@ DrawStripeImage Layout_DuckGame_E042
 
 
 
-JSR UpdateCameraPosition_C3C1
-JSR EnableRender_C5EE
-JMP QueueSFX_DuckGameStartTheme_D515
+
+
+
 
 InitDuckGame_C854:
-JSR InitVariablesAndOAM_D4D9                                ;
-JSR SetRequiredAmountOfHitsAndSummonDog_D2A4                ;summon god. i mean, dog.
-JSR UpdateRequiredHits_C793                                 ;
-JSR UpdateRoundNumber_C7B3                                  ;
 
-NOP                                                         ;the three sussy nopes... dummied JSR?
-NOP                                                         ;and yes, sussy. haha, amogus, OMEGALUL i am so funny.
-NOP                                                         ;
 
-LDA #$00                                                    ;
-STA ZapperEnabledFlag                                       ;
-STA $9D
 
-LDA #GameplayMode_DuckGameMain                              ;
-STA GameplayMode                                            ;
+
+
+
+
+
+
+
+
+
+
+
+
 RTS                                                         ;
 
 ExecuteDuckGame_C86E:
-JSR HandleZapperInput_D131                                  ;
-JSR HandleZapperFunctions_D160                              ;
-JSR HandleDogEntity_CC94                                    ;handle dog behavior. is it normal that the dog is laughing at me?
-JSR HandleDuckEntities_C890
-JSR HandleBulletVisualUpdate_C6F5
-JSR HandleHitTableIconAnimation_D3D2
-JSR HandleHitTableVisualUpdate_C6C4
-JSR HandleScoreSprites_CFBA
-JSR HandleShotCounterBlinkAnimation_D428
-JSR CODE_C7FB
 
-NOP                                                         ;you can't tell me there wasn't something there!
-NOP                                                         ;
-NOP                                                         ;
+
+
+
+
+
+
+
+
+
+
+
+
+
 RTS                                                         ;
 
 HandleDuckEntities_C890:
-LDA Entity_Variables_ActiveFlag+(Entity_Variables_Size*0)   ;check if duck 1 is enabled
-BEQ HandleSecondDuck_C8A2
 
-LDY #Entity_Variables_Size*0
-STY CurrentEntity_Slot                                      ;first entity
-JSR GetCurrentEntityVariables_C5F7
-JSR ExecuteDuckEntityCode_C902
-JSR UpdateEntityVariables_C607
+
+
+
+
+
+
+
 
 HandleSecondDuck_C8A2:
-LDA Entity_Variables_ActiveFlag+(Entity_Variables_Size*1)   ;check if duck 2 is enabled
-BEQ CODE_C8B4
 
-LDY #Entity_Variables_Size*1                                ;
-INC CurrentEntity_Slot                                      ;second entity
-JSR GetCurrentEntityVariables_C5F7                          ;
-JSR ExecuteDuckEntityCode_C902                              ;
-JSR UpdateEntityVariables_C607                              ;
+
+
+
+
+
+
+
 
 CODE_C8B4:
-LDA ZapperFunctionsEnabledFlag                              ;
-BEQ RETURN_C901                                             ;
 
-LDY $9F
-BNE CODE_C8C4
 
-LDY #$41
-LDA ShotCount
-BNE CODE_C8C4
 
-LDY #$15
+
+
+
+
+
+
+
+
 
 CODE_C8C4:
-DEY
-STY $9F
-LDA $BC
-BNE CODE_C8FB
 
-LDA Entity_Variables_CurrentState+(Entity_Variables_Size*0)
-BNE RETURN_C901                                             ;check if duck 1 exists
 
-LDA Entity_Variables_CurrentState+(Entity_Variables_Size*1)
-BNE RETURN_C901                                             ;check if duck 2 exists
 
-LDA Timer_2B
-BNE RETURN_C901                                             ;timer check
 
-LDA #$0A                                                    ;maniacal laughter incoming
-LDY #LoadPalette_FlyAwayDog                                 ;
-LDX CurrentShotDuckCount                                    ;check if shot any ducks, or they escaped
-BEQ CODE_C8E5                                               ;
 
-LDA #$0C                                                    ;happy dog is a good dog. i think.
-LDY #LoadPalette_DuckGame                                   ;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 CODE_C8E5:
-STA Entity_Variables_CurrentState+(Entity_Variables_Size*2) ;
-STY PaletteToLoad                                           ;
+
+
 
 JSR WaitForNMI_C5D9
-JSR DrawSHOT_D446                                           ;restore shot word if it blinked out of existence
 
-LDA #$40
-STA Timer_2B
 
-LDA #Message_None                                           ;remove message
-STA ZapperFunctionsEnabledFlag                              ;also disable zapper along the way
-JMP DrawMessage_D464                                        ;
+
+
+
+
+
+
 
 CODE_C8FB:
-LDA $A6
-BEQ RETURN_C901
 
-DEC $A6
+
+
+
 
 RETURN_C901:
 RTS
 
 ExecuteDuckEntityCode_C902:
-LDA CurrentEntity_State                                     ;duck state
-JSR ExecutePointers_C35E
+
+
 
 dw DoNothing_C5E0                                           ;do nothing (fled/lying on the ground)
 dw DuckEntity_Init_C919                                     ;
@@ -1827,705 +1827,705 @@ dw DuckEntity_Falling_CC7C
 dw CODE_CC8B
 
 DuckEntity_Init_C919:
-LDX #31                                                     ;
+
 
 LOOP_C91B:
-LDA DuckEntity_InitialVariables_E5EB,X                      ;set some initial values
-STA CurrentEntity_Variables,X
-DEX
-BPL LOOP_C91B
 
-LDA CurrentEntity_Slot                                      ;check if first or second duck
-BEQ CODE_C92F
 
-LDA #16*4
-STA CurrentEntity_OAMStartPoint                             ;adjust second duck's OAM offset
 
-LDA #(32*4)-1                                               ;where the OAM ceiling is, which dictates how many OAM slots does it take max, unused ones will be cleared.
-STA CurrentEntity_OAMEndPoint                               ;
+
+
+
+
+
+
+
+
+
+
 
 CODE_C92F:
-INC CurrentEntity_State                                     ;initialized, moving on
+
 
 RETURN_C931:
 RTS                                                         ;
 
 CODE_C932:
-LDA ZapperFunctionsEnabledFlag                              ;zapper disabled for some reason?
-BEQ RETURN_C931                                             ;nothing happens
 
-LDA $A6
-BNE RETURN_C931
 
-JSR RNG_C588                                                ;shake the proverbial box filled with numbers
-AND #$0F
-LDY SelectedGame                                            ;
-BNE CODE_C946                                               ;check if 1 duck game or 2 duck game
-CLC
-ADC #$10
+
+
+
+
+
+
+
+
+
+
 
 CODE_C946:
-CMP $9C
-BNE CODE_C958
-CLC
-ADC #$01
-CMP #$10
-BEQ CODE_C955
-CMP #$20
-BNE CODE_C958
+
+
+
+
+
+
+
+
 
 CODE_C955:
-SEC
-SBC #$10
+
+
 
 CODE_C958:
-STA $9C
-ASL A
-TAX
-LDA POINTERS_E60B,X
-STA $44
 
-LDA POINTERS_E60B+1,X
-STA $45
 
-JSR RNG_C588
-AND #$3F
-TAY
-INY
-STY $A6
 
-LDY #$00
-LDA ($44),Y
-INY
-STY $47
-STA CurrentEntity_XPos
 
-LDY #OAMProp_Palette0                                       ;first duck uses palettes 1 and 2
-LDX $99
-BEQ CODE_C980
 
-LDY #OAMProp_Palette2                                       ;second duck uses palettes 2 and 3
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 CODE_C980:
-STY CurrentEntity_OAMProp
 
-INC $99
 
-LDX CurrentDuckConfiguration
-LDA DuckColorConfigurations_E766,X
-CPY #$00
-BEQ CODE_C992
-AND #$0F
-JMP CODE_C996
+
+
+
+
+
+
+
+
 
 CODE_C992:
-LSR A
-LSR A
-LSR A
-LSR A
+
+
+
+
 
 CODE_C996:
-STA $3F
-LDX CurrentRound
-LDA SelectedGame
-BNE CODE_C9B9
 
-LDA #$0B
-CPX #$12
-BCS CODE_C9B2
 
-LDA #$0A
-CPX #$11
-BCS CODE_C9B2
 
-LDA #$09
-CPX #$10
-BCS CODE_C9B2
-DEX
-TXA
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 CODE_C9B2:
-TAX
-LDA DATA_E75A,X
-JMP CODE_C9D0
+
+
+
 
 CODE_C9B9:
-LDA #$1B
-LDX CurrentRound
-CPX #$10
-BCS CODE_C9C9
-DEX
-TXA
-STA $0C
-ASL A
-CLC
-ADC $0C
+
+
+
+
+
+
+
+
+
+
 
 CODE_C9C9:
-CLC
-ADC $3F
-TAX
-LDA DATA_E73C,X
+
+
+
+
 
 CODE_C9D0:
-STA $5E
 
-LDX CurrentRound                                            ;
-LDA #$0B                                                    ;duck's zapper shape becomes slightly the further you're in, making it harder to hit
-CPX #$27                                                    ;smallest hitbox
-BCS CODE_C9E2
 
-LDA #$0A
-CPX #$24                                                    ;rounds 24-26 will use this hitbox
-BCS CODE_C9E2
 
-LDA #$09                                                    ;standard collision otherwise (32x32)
+
+
+
+
+
+
+
+
+
 
 CODE_C9E2:
-STA CurrentEntity_ZapperShape                               ;
 
-LDA #$00
-STA $46
-STA $42
-STA $4E
-STA $4F
 
-LDA #$01
-STA $4B
-STA $AE
 
-LDA SelectedGame
-BNE CODE_CA0E
 
-LDX CurrentRound
-LDA #$7D
-CPX #$11
-BCC CODE_CA08
 
-LDA #$5D
-CPX #$20
-BCC CODE_CA08
 
-LDA #$3E
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 CODE_CA08:
-STA $4C
-LDA #$00
-STA $AF
+
+
+
 
 CODE_CA0E:
-INC TargetEntityCount
-LDA TargetEntityCount
-STA $3B
 
-DEC $BC
-INC CurrentEntity_State
+
+
+
+
+
 RTS
 
 CODE_CA19:
-LDA FrameCounter                                            ;flap sound effect every 8 frames
-AND #$07                                                    ;
-BNE CODE_CA22                                               ;
 
-JSR QueueSFX_WingFlag_D4EE                                  ;
+
+
+
+
 
 CODE_CA22:
-LDA $9F
-BNE CODE_CA29
 
-JSR QueueSFX_Quack_D52C                                     ;make a weird noise.
+
+
+
 
 CODE_CA29:
-LDA ShotCount                                               ;check if shots remain
-BNE CODE_CA3E
 
-LDA $4E
-BNE CODE_CA3E
 
-LDA #$01
-STA $4E
 
-LDA #$F0
-STA $46
-LDA #$00
-JMP CODE_CB77
+
+
+
+
+
+
+
+
+
+
 
 CODE_CA3E:
-LDA SelectedGame                                            ;check if 1 duck game or two
-BEQ CODE_CA45
+
+
 
 CODE_CA42:
-JMP CODE_CB59
+
 
 CODE_CA45:
-LDA $4B
-BEQ CODE_CA53
 
-LDA CurrentEntity_YPos
-CMP #$88
-BCS CODE_CA42
 
-LDA #$00
-STA $4B
+
+
+
+
+
+
+
 
 CODE_CA53:
-LDX #$01
-LDA $4C
-BEQ CODE_CA70
 
-LDA ShotCount                                               ;
-BNE CODE_CA66                                               ;
-STA $4C
+
+
+
+
+
+
 
 CODE_CA5F:
-JSR ShowFlyAwayMessage_CF96
 
-LDX #$01
-BNE CODE_CA70
+
+
+
 
 CODE_CA66:
-DEX
-LDA FrameCounter
-LSR A
-BCC CODE_CA70
 
-DEC $4C
-BEQ CODE_CA5F
+
+
+
+
+
+
 
 CODE_CA70:
-STX $AE
-CPX #$01
-BEQ CODE_CA8A
 
-LDA Controller1Input_Hold                                   ;see if controller 1 had pressed any direction
-AND #$0F
-BNE CODE_CAA8
 
-LDA Controller2Input_Hold                                   ;controller 2 d-pad check
-AND #$0F
-BNE CODE_CAA8
 
-LDA #$00
-STA $AF
-LDA $AE
-BEQ CODE_CA8D
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 CODE_CA8A:
-JMP CODE_CF16
+
 
 CODE_CA8D:
-LDA CurrentEntity_YPos
-CMP #$20
-BCC CODE_CAD1
-CMP #$90
-BCS CODE_CAD7
 
-LDX #$00
-LDA CurrentEntity_XPos
-CMP #$10
-BCC CODE_CAE3
-LDX #$08
-CMP #$F0
-BCS CODE_CAE9
+
+
+
+
+
+
+
+
+
+
+
+
 
 CODE_CAA5:
-JMP CODE_CBC3
+
 
 ;this code is responsible for manipulating duck movement with D-pad
 CODE_CAA8:
-CMP $AF
-BEQ CODE_CA8A 
-STA $AF
 
-LDX #$35                 
-LSR A                    
-BCS CODE_CABF
 
-LDX #$DB
-LSR A
-BCS CODE_CABF
 
-LDX #$79                 
-LSR A                    
-BCS CODE_CABF
- 
-LDX #$1F
 
-CODE_CABF:                   
-LDA FrameCounter
-LSR A
-TXA
-BCC CODE_CACA
-AND #$0F
-JMP CODE_CB56
 
-CODE_CACA:                   
-LSR A                    
-LSR A                    
-LSR A                    
-LSR A                    
-JMP CODE_CB56                
+
+
+
+
+
+
+
+
+
+
+
+
+
+CODE_CABF:
+
+
+
+
+
+
+
+CODE_CACA:
+
+
+
+
+
 
 CODE_CAD1:
-INC CurrentEntity_YPos
 
-LDY #$00
-BEQ CODE_CADB
+
+
+
 
 CODE_CAD7:
-DEC CurrentEntity_YPos
 
-LDY #$02
+
+
 
 CODE_CADB:
-LDA $48
-AND #$08
-TAX
-JMP CODE_CAED
+
+
+
+
 
 CODE_CAE3:
-INC CurrentEntity_XPos
 
-LDY #$04
-BNE CODE_CAED
+
+
+
 
 CODE_CAE9:
-DEC CurrentEntity_XPos
 
-LDY #$02
+
+
 
 CODE_CAED:
-STX $0C
-STY $0F
 
-LDA $48
-AND #$07
-EOR #$07
-ORA $0C
-STA $0C
-JSR RNG_C588
-AND #$03
-CMP #$03
-BNE CODE_CB06
-LDA #$02
+
+
+
+
+
+
+
+
+
+
+
+
 
 CODE_CB06:
-CLC
-ADC $0C
-STA $0E
-LDY $0F
-CMP #$00
-BNE CODE_CB1B
-CPY #$01
-BEQ CODE_CB4B
-CPY #$02
-BEQ CODE_CB45
-BNE CODE_CB50
+
+
+
+
+
+
+
+
+
+
+
 
 CODE_CB1B:
-CMP #$04
-BNE CODE_CB29
-CPY #$00
-BEQ CODE_CB50
-CPY #$02
-BEQ CODE_CB4B
-BNE CODE_CB45
+
+
+
+
+
+
+
 
 CODE_CB29:
-CMP #$08
-BNE CODE_CB37
-CPY #$00
-BEQ CODE_CB45
-CPY #$01
-BEQ CODE_CB50
-BNE CODE_CB4B
+
+
+
+
+
+
+
 
 CODE_CB37:
-CMP #$0C
-BNE CODE_CB52
-CPY #$00
-BEQ CODE_CB4B
-CPY #$01
-BEQ CODE_CB45
-BNE CODE_CB50
+
+
+
+
+
+
+
 
 CODE_CB45:
-JSR RNG_C588
-ASL A
-BCS CODE_CB50
+
+
+
 
 CODE_CB4B:
-DEC $0E
-JMP CODE_CB52
+
+
 
 CODE_CB50:
-INC $0E
+
 
 CODE_CB52:
-LDA $0E
-AND #$0F
+
+
 
 CODE_CB56:
-JMP CODE_CB77
+
 
 CODE_CB59:
-LDA $46
-BNE CODE_CBC3
 
-LDY $47
-LDA ($44),Y
-INY
-CMP #$FF
-BNE CODE_CB70
 
-LDA ($44),Y
-INY
-STA CurrentEntity_State
 
-LDA ($44),Y
-STA $42
+
+
+
+
+
+
+
+
+
+
+
+
 RTS
 
 
 CODE_CB70:
-STA $46
-LDA ($44),Y
-INY
-STY $47
+
+
+
+
 
 CODE_CB77:
-STA $48
-TAX
-LDA DATA_E64B,X
-STA $49
-STA $4A
 
-LDA #$00
-STA CurrentEntity_HorzDir
 
-LDA $48
-CMP #$11
-BCC CODE_CBA2
-TAX
-LDA #$00
-CPX #$15
-BEQ CODE_CBBC
-CPX #$14
-BEQ CODE_CBB0
-CPX #$13
-BEQ CODE_CBA8
 
-INC CurrentEntity_HorzDir
-CPX #$12
-BEQ CODE_CBB0
-BNE CODE_CBBC
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 CODE_CBA2:
-CMP #$08
-BCC CODE_CBA8
 
-INC CurrentEntity_HorzDir
+
+
+
 
 CODE_CBA8:
-LDX #<DATA_E70C
-LDY #>DATA_E70C
-AND #$07
-BEQ CODE_CBC0
+
+
+
+
 
 CODE_CBB0:
-LDX #<DATA_E705
-LDY #>DATA_E705
-CMP #$03
-BCC CODE_CBC0
-CMP #$06
-BCS CODE_CBC0
+
+
+
+
+
+
 
 CODE_CBBC:
-LDX #<DATA_E71D
-LDY #>DATA_E71D
+
+
 
 CODE_CBC0:
-JSR CODE_CF0B
+
 
 CODE_CBC3:
-JSR CODE_D81B
+
 
 CODE_CBC6:
-PHA
-LDA CurrentEntity_YPos
-CMP #$F0
-BCC CODE_CBD1
-PLA
-JMP CODE_CF2A
+
+
+
+
+
+
 
 CODE_CBD1:
-LDA $46
-BEQ CODE_CBD7
-DEC $46
+
+
+
 
 CODE_CBD7:
-LDY $49
+
 
 CODE_CBD9:
-LDA DATA_E661,Y
-INY
-CMP #$AA
-BNE CODE_CBE6
-LDY $4A
-JMP CODE_CBD9
+
+
+
+
+
+
 
 CODE_CBE6:
-CLC
-ADC CurrentEntity_YPos
-LDX $4B
-BNE CODE_CBF9
 
-LDX $AE
-BNE CODE_CBF9
 
-CMP #$1E
-BCC CODE_CBFB
-CMP #$92
-BCS CODE_CBFB
+
+
+
+
+
+
+
+
+
+
 
 CODE_CBF9:
-STA $32
+
 
 CODE_CBFB:
-LDA DATA_E661,Y
-INY
-STY $49
-CLC
-ADC CurrentEntity_XPos
 
-LDX $4B
-BNE CODE_CC14
 
-LDX $AE
-BNE CODE_CC14
 
-CMP #$0E
-BCC CODE_CC16
-CMP #$F2
-BCS CODE_CC16
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 CODE_CC14:
-STA CurrentEntity_XPos
+
 
 CODE_CC16:
-PLA
-SEC
-SBC #$01
-BNE CODE_CBC6
-JMP CODE_CE4D
+
+
+
+
+
 
 CODE_CC1F:
-LDX $3B
-LDA #$01
-STA HitTable-1,X
 
-LDA #$01
-STA $AD
-STA $5E
 
-LDA #$12
-STA $4D
-JSR CODE_CF68
 
-LDX #<DATA_E713
-LDY #>DATA_E713
+
+
+
+
+
+
+
+
+
+
+
 
 CODE_CC37:
-JSR CODE_CF0B
 
-INC CurrentEntity_State
+
+
 RTS
 
 CODE_CC3D:
-LDA $4D
-BEQ CODE_CC4C
 
-DEC $4D
-AND #$0F
-CMP #$0A
-BNE CODE_CC4C
 
-JSR QueueSFX_Quack_D52C                                     ;quack attack
+
+
+
+
+
+
+
 
 CODE_CC4C:
-JMP CODE_CE4D
+
 
 DuckEntity_StartFalling_CC4F:
-JSR SpawnScoreSprite_CFF9                                   ;show score
 
-JSR QueueSFX_DuckFall_D4F2                                  ;sound effect
 
-LDA CurrentEntity_XPos
-LDX #$48                                                    ;left boundary
-CMP #$48                                                    ;check where it is horizontally
-BCC CODE_CC64                                               ;
 
-LDX #$A0                                                    ;right boundary
-CMP #$A0
-BCS CODE_CC64
-TAX
+
+
+
+
+
+
+
+
+
+
 
 CODE_CC64:
-STX Entity_Variables_XPos+(Entity_Variables_Size*2)         ;the dog will show up where the duck fell, or close to
 
-LDA #$01
-STA $4B
 
-LDX #$10
-STX $48
 
-LDA DATA_E64B,X
-STA $49
-STA $4A
 
-LDX #<DATA_E718
-LDY #>DATA_E718
-BNE CODE_CC37
+
+
+
+
+
+
+
+
+
+
+
 
 DuckEntity_Falling_CC7C:
-LDA CurrentEntity_YPos                                      ;check if low enough on screen
-CMP #$B0
-BCS CODE_CC85                                               ;if that is the case, it landed somewhere on the ground.
-JMP CODE_CBC3
+
+
+
+
 
 CODE_CC85:
-JSR QueueSFX_GroundThud_D534                                ;hit ground sound
 
-INC CurrentEntity_State                                     ;
+
+
 RTS                                                         ;
 
 CODE_CC8B:
-LDA #$00
-STA CurrentEntity_State
 
-LDX CurrentEntity_OAMStartPoint
-JMP ClearEntityOAM_D042
+
+
+
+
 
 HandleDogEntity_CC94:
-LDA Entity_Variables_ActiveFlag+(Entity_Variables_Size*2)   ;check if dog exist
-BEQ RETURN_CCA8                                             ;dog no exist
 
-LDA #2                                                      ;dog slot
-STA CurrentEntity_Slot                                      ;
 
-LDY #Entity_Variables_Size*2                                ;dog variables
-JSR GetCurrentEntityVariables_C5F7                          ;
 
-JSR ExecuteDogEntityCode_CCA9                               ;execute code
-JSR UpdateEntityVariables_C607                              ;store variables
+
+
+
+
+
+
+
+
 
 RETURN_CCA8:
 RTS                                                         ;bow and quit
 
 ;dog state pointers
 ExecuteDogEntityCode_CCA9:
-LDA CurrentEntity_State
-JSR ExecutePointers_C35E
+
+
 
 dw DoNothing_C5E0
 dw DogEntity_Init_CCD4
@@ -2548,297 +2548,297 @@ dw CODE_CE4D
 dw CODE_CE40
 
 DogEntity_Init_CCD4:
-LDX #$1F                                                    ;
+
 
 CODE_CCD6:
-LDA DogEntity_InitialVariables_E76E,X                       ;
-STA CurrentEntity_Variables,X                               ;
-DEX                                                         ;
-BPL CODE_CCD6                                               ;
 
-LDA #$03                                                    ;that's right, the dog itself gives you those bullets, apparently.
-STA ShotCount                                               ;
 
-LDA #$01
-STA ShotCounterUpdateFlag                                   ;draw said bullets
-STA HitCounterUpdateFlag                                    ;draw hit counter
 
-LDA #LoadPalette_DuckGame
-STA PaletteToLoad                                           ;
 
-LDA GameplayMode                                            ;check if we game overed
-CMP #GameplayMode_GameOver                                  ;
-BNE CODE_CCF7                                               ;
 
-LDA #$10                                                    ;game over related..
-STA CurrentEntity_State
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 RTS
 
 CODE_CCF7:
-LDA CurrentRound
-LDY #$18
-LDX #$00
-CMP #$01                                                    ;check if at round 1 (just started the game)
-BEQ CODE_CD05                                               ;
 
-LDY #$50                                                    ;spawn closer to the center
-LDX #$18
+
+
+
+
+
+
+
 
 CODE_CD05:
-STY CurrentEntity_XPos
-STX $44
 
-LDA #$01
-STA $9D
-JSR WaitForNMI_C5D9
-JSR SoundEngine_F56C
 
-INC CurrentEntity_State                                     ;
+
+
+
+
+
+
+
 RTS                                                         ;
 
 CODE_CD16:
-LDX #<DATA_E78E
-LDY #>DATA_E78E
-JMP CODE_CD44
+
+
+
 
 CODE_CD1D:
-LDA CurrentEntity_Image
-CMP #$0C
-BNE CODE_CD2E
 
-INC $44
-LDA $44
-CMP #$20
-BCC CODE_CD2E
 
-INC CurrentEntity_State
+
+
+
+
+
+
+
+
 
 RETURN_CD2D:
 RTS
 
 CODE_CD2E:
-JSR CODE_CE4D
 
-LDA CurrentEntity_XPos
-CMP $45
-BNE RETURN_CD2D
 
-LDA #$06
-STA CurrentEntity_State
+
+
+
+
+
+
 RTS
 
 CODE_CD3C:
-LDA #$00
-STA $44
 
-LDX #<DATA_E798
-LDY #>DATA_E798
+
+
+
+
 
 CODE_CD44:
-JSR CODE_CF0B
 
-INC CurrentEntity_State
-JMP CODE_CE4D
+
+
+
 
 CODE_CD4C:
-LDX #<DATA_E7A7
-LDY #>DATA_E7A7
-BNE CODE_CD44
+
+
+
 
 CODE_CD52:
-LDA #$04
-STA $9E
 
-LDX #<DATA_E7AC
-LDY #>DATA_E7AC
-BNE CODE_CD44
+
+
+
+
+
 
 CODE_CD5C:
-DEC $9E
-LDA $9E
-BNE CODE_CD69
 
-LDA #$10
-STA $9E
 
-JSR QueueSFX_Bark_D528
+
+
+
+
+
+
 
 CODE_CD69:
-JMP CODE_CE4D
+
 
 CODE_CD6C:
-LDA Timer_2B
-BNE RETURN_CD2D                                             ;timer...
 
-JSR QueueSFX_DogLaugh_D4FA                                  ;hahaha! you suck!
 
-LDA #$80                                                    ;show up at the center of the screen
-STA CurrentEntity_XPos
-JSR CODE_CF39
 
-LDX #<DATA_E846
-LDY #>DATA_E846
-BNE CODE_CD44
+
+
+
+
+
+
+
+
+
 
 CODE_CD80:
-LDA Timer_2B
-BNE RETURN_CD2D
 
-JSR QueueSFX_GotDuckJingle_D511                                               ;happy jingle for getting ducks
-JSR CODE_CF39
 
-LDX #<DATA_E894
-LDY #>DATA_E894
 
-LDA CurrentShotDuckCount                                    ;check if shot one duck
-CMP #$01
-BEQ CODE_CD44
 
-LDX #<DATA_E8A3
-LDY #>DATA_E8A3
-BNE CODE_CD44                                               ;two ducks
+
+
+
+
+
+
+
+
+
+
+
+
 
 SpawnDucks_CD9A:
-LDA #$30
-STA $A6
 
-LDA #$01                                                    ;
-STA ZapperFunctionsEnabledFlag                              ;can use zapper
 
-LDA #$03                                                    ;restore shots
-STA ShotCount                                               ;
 
-LDA #$01                                                    ;
-STA ShotCounterUpdateFlag                                   ;will draw them all
 
-LDA #$00                                                    ;
-STA CurrentShotDuckCount                                    ;clear shot duck counter
 
-LDA #$02                                                    ;
-LDY #$01                                                    ;second duck may be active depending on selected game
-LDX SelectedGame                                            ;
-BNE CODE_CDBA                                               ;
 
-LDA #$01                                                    ;
-LDY #$00                                                    ;second duck not active
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 CODE_CDBA:
-STA $BC
-STY Entity_Variables_ActiveFlag+(Entity_Variables_Size*1)
-STY Entity_Variables_CurrentState+(Entity_Variables_Size*1)
 
-LDA #$01                                                    ;first duck is already enabled
-STA Entity_Variables_ActiveFlag+(Entity_Variables_Size*0)   ;
-STA Entity_Variables_CurrentState+(Entity_Variables_Size*0) ;
 
-JSR RNG_C588                                                ;randomize
-STA $0C                                                     ;
 
-LDA #$03                                                    ;
-LDY CurrentRound                                            ;check if in round 1
-CPY #$01                                                    ;
-BEQ CODE_CDD9                                               ;will have a smaller range of duck configurations on first round only.
 
-LDA #$07                                                    ;can release ducks at any possible configuration
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 CODE_CDD9:
-AND $0C
-STA CurrentDuckConfiguration
 
-LDY #$00
-STY $99
-TAX
-LDA DuckColorConfigurations_E766,X
-STA $0C
-AND #$F0                                                    ;
-LSR A                                                       ;
-LDY #$00                                                    ;first duck's palette
-JSR LoadDuckPalette_CF44
 
-LDA $0C                                                     ;
-AND #$0F                                                    ;
-ASL A                                                       ;times 8
-ASL A                                                       ;
-ASL A                                                       ;second duck's palette
-JSR LoadDuckPalette_CF44
 
-LDA #$3F                                                    ;VRAM offset
-STA DuckPaletteStorage                                      ;
 
-LDA #$10                                                    ;
-STA DuckPaletteStorage+1                                    ;
-STA DuckPaletteStorage+2                                    ;and size, 16 bytes
 
-LDA #StripeImageWriteCommand_Stop                           ;stop command
-STA DuckPaletteStorage+19                                   ;
 
-LDA #$01                                                    ;
-STA DuckPaletteLoadFlag                                     ;Paint Me! This is another reference to Color a Dinosaur. Because that's what it was called in the prototype.
 
-LDA #$12
-STA CurrentEntity_State
 
-LDA #$00
-STA $42
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 RTS
 
 CODE_CE18:
-LDA TargetEntityCount
-CMP #$0A
-BNE CODE_CE29
 
-LDA #$00
-STA RoundEndState
 
-LDA #GameplayMode_RoundEnd_DuckGame
-STA GameplayMode
-JMP ClearOAM_C23B
+
+
+
+
+
+
+
+
 
 CODE_CE29:
-LDA #$0E
-STA CurrentEntity_State
+
+
 RTS
 
 CODE_CE2E:
-LDA #$80                                                    ;spawn at the center
-STA CurrentEntity_XPos                                      ;
 
-LDA #$01
-STA CurrentEntity_BehindBGFlag                              ;go behind background
-JSR CODE_CF39
 
-LDX #<DATA_E8B2
-LDY #>DATA_E8B2
-JMP CODE_CD44
+
+
+
+
+
+
+
+
 
 CODE_CE40:
-LDA $42
-BNE CODE_CE4D
 
-LDA #$00
-STA CurrentEntity_State
 
-LDX CurrentEntity_OAMStartPoint
-JMP ClearEntityOAM_D042
+
+
+
+
+
+
 
 ;a drawing routine of sorts
 CODE_CE4D:
-LDA $42
-BEQ CODE_CE56
 
-DEC $42
-JMP SpriteDrawRoutine_D01B
+
+
+
+
 
 CODE_CE56:
-LDY $43
-LDA ($40),Y
-CMP #$FA
-BCC CODE_CE72
 
-INC $43
-SEC
-SBC #$FA
-JSR ExecutePointers_C35E
+
+
+
+
+
+
+
+
 
 dw DoNothing_C5E0                                           ;unused
 dw DoNothing_C5E0                                           ;unused
@@ -2848,840 +2848,840 @@ dw CODE_CEF9
 dw CODE_CEED
 
 CODE_CE72:
-LDY $43
-LDX CurrentEntity_Slot                                      ;check if we're drawing a dog
-CPX #$02                                                    ;
-BNE CODE_CEE6                                               ;
 
-LDX CurrentEntity_State
-CPX #$09
-BEQ CODE_CEAD
-CPX #$0B
-BEQ CODE_CE8C
-CPX #$0D
-BEQ CODE_CE8C
-CPX #$11
-BNE CODE_CED4
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 CODE_CE8C:
-LDX $46
-BEQ CODE_CE9C
 
-DEC $46
 
-LDA $47
-CLC
-ADC CurrentEntity_YPos
-STA CurrentEntity_YPos
-JMP SpriteDrawRoutine_D01B
+
+
+
+
+
+
+
+
 
 CODE_CE9C:
-STA $46
-INY
-LDA ($40),Y
-BPL CODE_CEA8
-AND #$7F
-JSR InvertValue_D12B
+
+
+
+
+
+
 
 CODE_CEA8:
-STA $47
-JMP CODE_CEC9
+
+
 
 CODE_CEAD:
-TAX
-BPL CODE_CEB5
-AND #$7F
-JSR InvertValue_D12B
+
+
+
+
 
 CODE_CEB5:
-CLC
-ADC CurrentEntity_YPos
-STA CurrentEntity_YPos
 
-INY
-LDA ($40),Y
-LDX CurrentEntity_HorzDir
-BEQ CODE_CEC4
 
-JSR InvertValue_D12B
+
+
+
+
+
+
+
+
 
 CODE_CEC4:
-CLC
-ADC CurrentEntity_XPos
-STA CurrentEntity_XPos
+
+
+
 
 CODE_CEC9:
-INY
-LDA ($40),Y
-STA CurrentEntity_Image
-INY
-STY $43
-JMP SpriteDrawRoutine_D01B
+
+
+
+
+
+
 
 CODE_CED4:
-CPX #$03                                                    ;????
-BNE CODE_CEE6
 
-LDA #$02
-LDX CurrentEntity_HorzDir
-BEQ CODE_CEE1
 
-JSR InvertValue_D12B
+
+
+
+
+
+
 
 CODE_CEE1:
-CLC
-ADC CurrentEntity_XPos
-STA CurrentEntity_XPos
+
+
+
 
 CODE_CEE6:
-LDA ($40),Y
-STA $42
-JMP CODE_CEC9
+
+
+
 
 CODE_CEED:
-LDY $43
-LDA ($40),Y
-STA CurrentEntity_State
 
-INY
-LDA ($40),Y
-STA $42
+
+
+
+
+
+
 RTS
 
 
 CODE_CEF9:
-LDA #$00
+
 
 CODE_CEFB:
-STA $43
-JMP CODE_CE56
+
+
 
 CODE_CF00:
-LDA #$01
-STA CurrentEntity_BehindBGFlag
-JMP CODE_CE56
+
+
+
 
 CODE_CF07:
-LDA #$1E
-BNE CODE_CEFB
+
+
 
 CODE_CF0B:
-STX $40
-STY $41
 
-LDA #$00
-STA $43
-STA $42
+
+
+
+
+
 RTS
 
 ;keep ducks in bounds?
 CODE_CF16:
-LDA CurrentEntity_YPos
-CMP #$08
-BCC CODE_CF2A
-CMP #$90
-BCS CODE_CF33
 
-LDA CurrentEntity_XPos
-CMP #$0C
-BCC CODE_CF2A
-CMP #$F4
-BCC CODE_CF36
+
+
+
+
+
+
+
+
+
+
 
 CODE_CF2A:
-LDA #$08
-STA CurrentEntity_State
 
-LDA #$00
-STA $42
+
+
+
+
 RTS
 
 CODE_CF33:
-JMP CODE_CAD7
+
 
 CODE_CF36:
-JMP CODE_CAA5
+
 
 CODE_CF39:
-LDA #$00
-STA $46
-STA $47
 
-LDA #$AC
-STA CurrentEntity_YPos
+
+
+
+
+
 RTS
 
 ;input A - palette offset
 LoadDuckPalette_CF44:
-TAX                                                         ;
-LDA #$08                                                    ;amount of colors to load
-STA $0D                                                     ;
+
+
+
 
 CODE_CF49:
-LDA DuckPalettes_E724,X
-STA DuckPaletteStorage+3,Y
-INX
-INY
-DEC $0D
-BNE CODE_CF49
+
+
+
+
+
+
 RTS
 
 ;clay pigeon score
 CODE_CF56:
-LDA CurrentRound
-LDY #$02
-CMP #$06
-BCC CODE_CF7F
 
-LDY #$03
-CMP #$11
-BCC CODE_CF7F
 
-LDY #$05
-BNE CODE_CF7F
+
+
+
+
+
+
+
+
+
 
 ;duck score i think...
 CODE_CF68:
-LDX CurrentRound
-LDA #$00
-CPX #$06
-BCC CODE_CF78
 
-LDA #$03
-CPX #$11
-BCC CODE_CF78
 
-LDA #$06                                                    ;higher score from round 11 onwards
+
+
+
+
+
+
+
+
 
 CODE_CF78:
-CLC
-ADC $3F                                                     ;duck's color
-TAX
-LDY DuckScoreRewardIndexes_EBF1,X
+
+
+
+
 
 CODE_CF7F:
-STY CurrentEntity_ScoreReward                               ;will spawn this score sprite
 
-LDA ScoreSpriteRewards_EBFA,Y
-STA $06
 
-LDA #$00
-STA $04
-STA $05
-STA $07
 
-LDA #$0F
-JSR UpdateScore_C437                                        ;GIVE ME SCORE
-JMP PutScoreIntoBuffer_C655
+
+
+
+
+
+
+
+
+
+
 
 ShowFlyAwayMessage_CF96:
-LDA CurrentShotDuckCount                                    ;if shot a duck, fly away message will not be displayed
-BNE RETURN_CFB9
 
-LDA #Message_FLY_AWAY                                       ;fly away
-JSR DrawMessage_D464                                        ;
 
-LDA #$30
-STA Timer_2B
 
-LDA #LoadPalette_FlyAwayBackgroundRestore                   ;
-STA PaletteToLoad                                           ;
 
-LDA #$01                                                    ;
-STA DuckPaletteLoadFlag                                     ;
 
-LDA #$36                                                    ;this will set back area color to a different color.
-STA DuckPaletteStorage+3
-STA DuckPaletteStorage+7
-STA DuckPaletteStorage+11
-STA DuckPaletteStorage+15
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 RETURN_CFB9:
 RTS                                                         ;
 
 HandleScoreSprites_CFBA:
-LDX #$00                                                    ;first score sprite
-LDY #$00                                                    ;
-JSR CODE_CFC5
 
-LDX #$04                                                    ;second score sprite
-LDY #$08                                                    ;
+
+
+
+
+
 
 CODE_CFC5:
-LDA ScoreSprite_Timer,X                                     ;
-BEQ RETURN_CFF8                                             ;
 
-DEC ScoreSprite_Timer,X                                     ;check if timer just ran out
-BNE CODE_CFD3                                               ;
 
-LDA #$F4                                                    ;remove this score sprite
-STA ScoreSprite_YPos,X                                      ;
-STA ScoreSprite_XPos,X                                      ;
+
+
+
+
+
+
+
 
 CODE_CFD3:
-LDA ScoreSprite_YPos,X                                      ;
-STA Score_OAM_Y,Y                                           ;
-STA Score_OAM_Y+4,Y                                         ;
 
-LDA ScoreSprite_Tile,X                                      ;
-STA Score_OAM_Tile,Y                                        ;
 
-LDA #$FF                                                    ;second tile is always 00
-STA Score_OAM_Tile+4,Y                                      ;
 
-LDA #$00                                                    ;
-STA Score_OAM_Prop,Y                                        ;properties
-STA Score_OAM_Prop+4,Y                                      ;
 
-LDA ScoreSprite_XPos,X
-STA Score_OAM_X,Y                                           ;
-CLC                                                         ;
-ADC #$08                                                    ;second tile is 8 pixels to the right
-STA Score_OAM_X+4,Y                                         ;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 RETURN_CFF8:
 RTS                                                         ;
 
 SpawnScoreSprite_CFF9:
-LDX #$00                                                    ;
-LDA ScoreSprite_Timer,X                                     ;check if the first score sprite is currently on-screen
-BEQ CODE_D001                                               ;
 
-LDX #$04                                                    ;spawn second one
+
+
+
+
 
 CODE_D001:
-LDA CurrentEntity_YPos                                      ;
-SEC                                                         ;
-SBC #$04                                                    ;
-STA ScoreSprite_YPos,X                                      ;
 
-LDA CurrentEntity_XPos                                      ;
-SEC                                                         ;
-SBC #$08                                                    ;
-STA ScoreSprite_XPos,X                                      ;
 
-LDA CurrentEntity_ScoreReward                               ;
-CLC                                                         ;
-ADC #$F7                                                    ;
-STA ScoreSprite_Tile,X                                      ;
 
-LDA #$30                                                    ;
-STA ScoreSprite_Timer,X                                     ;
-RTS                                                         ;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 SpriteDrawRoutine_D01B:
-LDA CurrentEntity_OAMStartPoint
-STA CurrentOAMOffset
 
-LDA CurrentEntity_Image                                     ;what sprite image to display
-ASL A
-TAY
+
+
+
+
+
 
 Macro_SetWord POINTERS_DAC5, $12
 
-LDA ($12),Y
-STA $10                                                     ;get graphics pointer
 
-INY
-LDA ($12),Y
-STA $11
 
-LDY #$00
-STY $1A
+
+
+
+
+
+
+
 
 LOOP_D038:
-LDY $1A
-LDA ($10),Y
-CMP #$00                                                    ;go through the subpointer until we hit the break command
-BNE CODE_D050
 
-LDX CurrentOAMOffset                                        ;will clear any unused tiles
+
+
+
+
+
 
 ClearEntityOAM_D042:
-LDA #$F4                                                    ;
+
 
 LOOP_D044:
-CPX CurrentEntity_OAMEndPoint                               ;
-BEQ RETURN_D04F                                             ;
-STA OAM_Y,X                                                 ;
-INX                                                         ;
-JMP LOOP_D044                                               ;
+
+
+
+
+
 
 RETURN_D04F:
 RTS                                                         ;
 
 CODE_D050:
-STA $13                                                     ;set up subpointer
 
-INY
-LDA ($10),Y
-INY
-STA $12                                                     ;subpointer
 
-LDA ($10),Y
-INY
-CLC
-ADC CurrentEntity_YPos
-STA $B1                                                     ;entire image y-offset
 
-LDA ($10),Y
-INY
-LDX CurrentEntity_HorzDir
-BEQ CODE_D06D                                               ;check if horizontally flipped?
 
-JSR InvertValue_D12B
-SEC
-SBC #$08
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 CODE_D06D:
-CLC
-ADC CurrentEntity_XPos
-STA $B2
 
-STY $1A
 
-LDY #$00
-LDA ($12),Y                                                 ;first byte is image's shape
-LDX #$00
-CMP #$00
-BEQ CODE_D08C
 
-LDX #$10
-CMP #$01
-BEQ CODE_D08C
 
-LDX #$38
-CMP #$02
-BEQ CODE_D08C
 
-LDX #$44
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 CODE_D08C:
-STX $1B
+
 
 LOOP_D08E:
-INY
+
 
 LOOP_D08F:
-LDA ($12),Y                                                 ;
-CMP #$FF                                                    ;end subpointer command
-BEQ LOOP_D038                                               ;
-CMP #$FE                                                    ;skip tile command?
-BNE CODE_D0A0                                               ;
 
-INC $1B                                                     ;skip this tile
-INC $1B                                                     ;
-JMP LOOP_D08E                                               ;
+
+
+
+
+
+
+
+
 
 CODE_D0A0:
-CMP #$FD                                                    ;check if we're setting a tile
-BNE CODE_D0B9
 
-INY                                                         ;set property
-LDA ($12),Y                                                 ;
-CLC                                                         ;note: gets added instead of doing logical or
-ADC CurrentEntity_OAMProp                                   ;
-STA CurrentOAMProperty                                      ;
 
-LDA CurrentEntity_BehindBGFlag                              ;if the entity is behind BG, will enable background priority bit
-BEQ LOOP_D08E                                               ;
 
-LDA CurrentOAMProperty                                      ;
-ORA #OAMProp_BGPriority                                     ;
-STA CurrentOAMProperty                                      ;
-JMP LOOP_D08E                                               ;
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 CODE_D0B9:
-LDX $1B
-LDA GeneralSpriteTileOffsets_DCC0,X
-INC $1B
-CLC
-ADC $B1
-JSR CODE_D10E
 
-LDX CurrentOAMOffset
-STA OAM_Y,X
 
-INC CurrentOAMOffset
 
-LDA ($12),Y
-INY
-LDX CurrentOAMOffset
-STA OAM_Tile-1,X
 
-INC CurrentOAMOffset
 
-LDA CurrentOAMProperty
-LDX CurrentEntity_HorzDir
-BEQ CODE_D0E9
-AND #$BF
-STA $0C
 
-LDA CurrentOAMProperty
-AND #OAMProp_XFlip
-EOR #OAMProp_XFlip
-ORA $0C
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 CODE_D0E9:
-LDX CurrentOAMOffset
-STA OAM_Prop-2,X
 
-INC CurrentOAMOffset
-LDX $1B
-LDA GeneralSpriteTileOffsets_DCC0,X
-INC $1B
 
-LDX CurrentEntity_HorzDir
-BEQ CODE_D0FE
-JSR InvertValue_D12B
+
+
+
+
+
+
+
+
+
 
 CODE_D0FE:
-CLC
-ADC $B2
-JSR CODE_D114
 
-LDX CurrentOAMOffset
-STA OAM_X-3,X
-INC CurrentOAMOffset
-JMP LOOP_D08F
+
+
+
+
+
+
+
 
 CODE_D10E:
-PHA
-LDA CurrentEntity_YPos
-JMP CODE_D117
+
+
+
 
 CODE_D114:
-PHA
-LDA CurrentEntity_XPos
+
+
 
 CODE_D117:
-STA $0F
-PLA                                                         ;
-PHA                                                         ;
-SEC
-SBC $0F
-BCS CODE_D123
 
-JSR InvertValue_D12B
+
+
+
+
+
+
+
 
 CODE_D123:
-CMP #$30
-PLA
-BCC RETURN_D12A
 
-LDA #$FF                                                    ;tile offscreen
+
+
+
+
 
 RETURN_D12A:
 RTS
 
 ;input A
 InvertValue_D12B:
-EOR #$FF                                                    ;
-CLC                                                         ;
-ADC #$01                                                    ;
-RTS                                                         ;
+
+
+
+
 
 HandleZapperInput_D131:
-LDA Zapper_OutputBits                                       ;
-AND #$10                                                    ;check if squeezed the trigger
-CMP ZapperTriggerState                                      ;check if the trigger state is the same
-BEQ CODE_D141                                               ;it same
-STA ZapperTriggerState                                      ;update
+
+
+
+
+
 
 CODE_D13C:
-LDA #$00                                                    ;some counter.
-STA ZapperCounter                                           ;
+
+
 
 RETURN_D140:
 RTS                                                         ;
 
 CODE_D141:
-INC ZapperCounter                                           ;increment this timer, counter, or whatever
 
-LDY ZapperCounter                                           ;
-CPY #$01                                                    ;
-BNE RETURN_D140                                             ;it cannot be anything other than $01, because it gets cleared.
-AND #$10                                                    ;check trigger state again, if it's released/fully in
-BEQ CODE_D153                                               ;
 
-LDA #$01                                                    ;half-pressed trigger state. there's a half A press joke in there somewhere.
-STA ZapperPulledTriggerFlag                                 ;
-BNE CODE_D13C                                               ;
+
+
+
+
+
+
+
+
+
 
 CODE_D153:
-LDA ZapperPulledTriggerFlag                                 ;
-BEQ CODE_D13C                                               ;
 
-LDY #$00                                                    ;
-STY ZapperPulledTriggerFlag                                 ;clear this flag
-INY                                                         ;
-STY ZapperEnabledFlag                                       ;re-enable zapper
-BNE CODE_D13C                                               ;
+
+
+
+
+
+
+
 
 HandleZapperFunctions_D160:
-LDA ZapperFunctionsEnabledFlag                              ;
-BNE CODE_D169                                               ;
+
+
 
 DisableZapper_D164:
-LDA #$00                                                    ;
-STA ZapperEnabledFlag                                       ;
+
+
 
 RETURN_D168:
 RTS                                                         ;
 
 CODE_D169:
-LDA ZapperEnabledFlag                                       ;if zapper functionality isn't enabled...
-BEQ RETURN_D168                                             ;return
 
-LDA ShotCount                                               ;check if out of shots
-BEQ DisableZapper_D164                                      ;
 
-DEC ShotCount                                               ;-1 shot
 
-LDA #$01                                                    ;
-STA ShotCounterUpdateFlag                                   ;update shot counter because we took one bullet away
 
-LDA #$00                                                    ;
-STA ZapperEnabledFlag                                       ;momentarily disable zapper
 
-JSR QueueSFX_ZapperShot_D4E6                                ;the weird noise from your gun.
 
-LDA #LoadPalette_Zapper1                                    ;
-STA PaletteToLoad                                           ;
-JSR ClearOAM_C23B                                           ;
-JSR DisableRender_C5E1                                      ;
 
-LDA TitleScreenFlag                                         ;check if at title screen
-BEQ CODE_D19F                                               ;
 
-JSR QueueSFX_Silence_D4E2                                   ;shut up, title screen!
-JSR SoundEngine_F56C                                        ;handle sound while we're waiting for transition
 
-JSR QueueSFX_ZapperShot_D4E6                                ;the game attempts to play the zapper shot sound after the title screen...?
 
-LDA #$02                                                    ;shooting at the title screen
-STA ZapperShotConfiguration
 
-LDA #$FF                                                    ;
-STA CameraPositionX                                         ;the camera is set... somewhere?
-BNE CODE_D1CA
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 CODE_D19F:
-LDA #LoadPalette_Zapper2                                    ;
-STA PaletteToLoad                                           ;
 
-LDA #$00                                                    ;targetting duck 1
-STA ZapperShotConfiguration
 
-LDY #Entity_Variables_Size*0
-LDA Entity_Variables_ActiveFlag+(Entity_Variables_Size*0)   ;duck real?
-BEQ CODE_D1B5
 
-LDA Entity_Variables_CurrentState+(Entity_Variables_Size*0)
-CMP #$03
-BEQ CODE_D1C7                                               ;check if can be shot
+
+
+
+
+
+
+
+
+
+
 
 CODE_D1B5:
-LDA #$01                                                    ;targetting duck 2, duck 1 does not exist
-STA ZapperShotConfiguration
 
-LDY #Entity_Variables_Size*1                                ;
-LDA Entity_Variables_ActiveFlag+(Entity_Variables_Size*1)   ;how many different ways can I ask if the duck is real?
-BEQ CODE_D1DD                                               ;
 
-LDA Entity_Variables_CurrentState+(Entity_Variables_Size*1) ;
-CMP #$03
-BNE CODE_D1DD                                               ;
+
+
+
+
+
+
+
+
 
 CODE_D1C7:
-JSR DrawZapperShapePrep_D292
+
 
 CODE_D1CA:
 JSR PrepareForNMIWait_C61E                                  ;
 
 LOOP_D1CD:
-LDA FrameFlag                                               ;wait for the NMI hit...
-BNE CODE_D1F4                                               ;
 
-LDA Zapper_OutputBits                                       ;
-AND #$08                                                    ;I am guessing this checks if the gun is pointed at the screen
-BNE LOOP_D1CD                                               ;
 
-LDA ZapperShotConfiguration
-JMP CODE_D28A
+
+
+
+
+
+
+
 
 CODE_D1DD:
-LDA SelectedGame                                            ;
-CMP #$02                                                    ;
-BNE CODE_D1E6                                               ;check if we're in duck game
-JMP CODE_D266                                               ;
+
+
+
+
 
 CODE_D1E6:
-LDY #LoadPalette_DuckGame                                   ;
-STY PaletteToLoad                                           ;
 
-JSR WaitForNMI_C5D9                                         ;
 
-LDY #$01                                                    ;
-STY DuckPaletteLoadFlag                                     ;restore duck colors
-JMP CODE_D26A
+
+
+
+
+
+
 
 CODE_D1F4:
-JSR PrepareForNMIWait_C61E                                  ;
 
-LDA RenderMirror                                            ;
-AND #$E7                                                    ;will disable sprites and background
-STA RenderMirror                                            ;
 
-LDA #$08                                                    ;enable background
-LDY ZapperShotConfiguration                                 ;
-CPY #$02                                                    ;check if shooting at title screen
-BEQ CODE_D207
 
-LDA #$10                                                    ;enable sprites, they should be white shapes
+
+
+
+
+
+
+
+
+
 
 CODE_D207:
-ORA RenderMirror
-STA RenderMirror
-STA RenderBits
 
-JSR ClearOAM_C23B                                           ;remove all sprites
 
-LDA Entity_Variables_ActiveFlag+(Entity_Variables_Size*1)   ;check the presence of the second duck
-BEQ CODE_D222                                               ;
 
-LDA Entity_Variables_CurrentState+(Entity_Variables_Size*1) ;
-CMP #$03                                                    ;
-BNE CODE_D222                                               ;can it be targeted?
 
-LDY #Entity_Variables_Size*1                                ;
-JSR DrawZapperShapePrep_D292                                ;draw second duck's shape
+
+
+
+
+
+
+
+
+
+
+
 
 CODE_D222:
-LDA FrameFlag
-BNE CODE_D270
 
-LDA Zapper_OutputBits                                       ;check if detected light
-AND #$08
-BNE CODE_D222
 
-LDA ZapperShotConfiguration
-CMP #$02
-BNE CODE_D246
 
-LDA #$01                                                    ;
+
+
+
+
+
+
+
+
+
 
 CODE_D235:
-STA TitleScreenZapperShotState                              ;
 
-LDA #LoadPalette_TitleScreen                                ;
-STA PaletteToLoad                                           ;
 
-LDA #$00
-STA CameraPositionX                                         ;set camera where it belongs
-JSR WaitForNMI_C5D9
-JMP EnableRender_C5EE
+
+
+
+
+
+
+
 
 CODE_D246:
-INC CurrentHitCount                                         ;
-INC CurrentShotDuckCount                                    ;shot a duck
 
-LDX #$04                                                    ;shot state
-LDA ZapperShotConfiguration
-BNE CODE_D256                                               ;check if we hit first or second duck
-STX Entity_Variables_CurrentState+(Entity_Variables_Size*0) ;
-JMP CODE_D259
+
+
+
+
+
+
+
 
 CODE_D256:
-STX Entity_Variables_CurrentState+(Entity_Variables_Size*1) ;
+
 
 CODE_D259:
-LDA SelectedGame                                            ;check if in clay pigeon game
-CMP #$02                                                    ;
-BEQ CODE_D266                                               ;
 
-LDY #$01                                                    ;Color a Duck. Not as cool as Color a Dinosaur. 
-STY DuckPaletteLoadFlag                                     ;
-INY                                                         ;LDY #LoadPalette_DuckGame
-BNE CODE_D268                                               ;
+
+
+
+
+
+
+
 
 CODE_D266:
-LDY #LoadPalette_ClayShooting                               ;
 
-CODE_D268:
-STY PaletteToLoad                                           ;
+
+
+
 
 CODE_D26A:
-JSR ClearOAM_C23B                                           ;
-JMP EnableRender_C5EE                                       ;
+
+
 
 CODE_D270:
-LDA ZapperShotConfiguration
-BNE CODE_D28A
 
-LDA Entity_Variables_ActiveFlag+(Entity_Variables_Size*1)   ;check for second duck... again?
-BEQ CODE_D259
 
-LDA Entity_Variables_CurrentState+(Entity_Variables_Size*1)
-CMP #$03
-BNE CODE_D259
 
-LDA #$01
-STA ZapperShotConfiguration
-JSR PrepareForNMIWait_C61E
-JMP CODE_D222
+
+
+
+
+
+
+
+
+
+
+
 
 CODE_D28A:
-CMP #$02                                                    ;check if we're shooting at the title screen
-BNE CODE_D259
 
-LDA #$02                                                    ;acts as select
-BNE CODE_D235                                               ;
+
+
+
+
 
 DrawZapperShapePrep_D292:
-LDA Entity_Variables_YPos,Y
-STA $B1
 
-LDA Entity_Variables_XPos,Y
-STA $B2
 
-LDA $030A,Y
-STA $0C
-JMP DrawZapperShape_C67C
+
+
+
+
+
+
+
 
 ;note: only dog only shows up in duck games, but it's there in spirit at clay shooting. watching over you from the skies.
-SetRequiredAmountOfHitsAndSummonDog_D2A4
-LDY RequiredHitCountIndex                                   ;
+SetRequiredAmountOfHitsAndSummonDog_D2A4:
+
 
 CODE_D2A6:
-LDA RequiredHitAmountPerRound_EC02,Y                        ;
-CMP #$FF                                                    ;check if reached the end of this table
-BNE CODE_D2B1                                               ;
 
-LDY #$13                                                    ;hardcoded index (coulda just DEY honestly)
-BNE CODE_D2A6                                               ;
+
+
+
+
+
 
 CODE_D2B1:
-INY                                                         ;
-STY RequiredHitCountIndex                                   ;
-STA HitCountToWin                                           ;set an amount of hits we need to beat this round
 
-LDA #$00                                                    ;
-STA TargetEntityCount                                       ;
-STA CurrentHitCount                                         ;reset hit counter
 
-LDA #$01                                                    ;enable dog
-STA Entity_Variables_ActiveFlag+(Entity_Variables_Size*2)   ;
-STA Entity_Variables_CurrentState+(Entity_Variables_Size*2) ;sniff sniff
 
-LDA #$FF                                                    ;
-STA $9C
+
+
+
+
+
+
+
+
+
+
+
 RTS                                                         ;
 
 ;victory state
 RoundEnd_D2C9:
-LDA RoundEndState                                           ;
-JSR ExecutePointers_C35E                                    ;
+
+
 
 dw HitTableShuffleDelay_D2D6
 dw ShuffleHitTable_D2DD
@@ -3689,681 +3689,681 @@ dw RoundBeatenAnimation_D33D
 dw WaitAfterPerfect_D3C9
 
 HitTableShuffleDelay_D2D6:
-LDA #$10                                                    ;hit table shuffles every 16 frames
-STA Timer_2B
 
-INC RoundEndState
-RTS
+
+
+
+
 
 ShuffleHitTable_D2DD:
 LDA Timer_2B
-BNE RETURN_D32A                                             ;wait for the timer to end
+BNE RETURN_D32A 
 
-LDY #$00
-LDX #$01
 
-LOOP_D2E5:
-LDA HitTable,X
-BEQ CODE_D2F7
 
-LDA HitTable-1,X
-BNE CODE_D2F7
 
-INC HitTable-1,X
-DEC HitTable,X
 
-LDY #$01
 
-CODE_D2F7:
-INX
-CPX #$0A
-BNE LOOP_D2E5
-DEY
-BNE CODE_D309
 
-LDA #$00                                                    ;reset round end state, will shuffle hit table again
-STA RoundEndState
-JSR QueueSFX_DuckGameStartTheme_D519
-JMP DrawHitTable_C6CC
 
-CODE_D309:
-LDA CurrentHitCount                                         ;check if we hit less than a required amount
-CMP HitCountToWin                                           ;
-BCC CODE_D32B
 
-JSR QueueSFX_BeatRoundTheme_D51D
 
-LDA #$00                                                    ;
-STA ShotCounterUpdateFlag                                   ;
 
-LDA #$10
-STA Timer_2B
 
-INC RoundEndState                                           ;
 
-LDA CurrentRound                                            ;display GOOD every 10 rounds
-AND #$0F                                                    ;
-BNE RETURN_D32A                                             ;
 
-JSR ClearOAM_C23B                                           ;
 
-LDA #Message_GOOD                                           ;
-JMP DrawMessage_D464                                        ;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 RETURN_D32A:
-RTS                                                         ;
-
-CODE_D32B:
-JSR ClearOAM_C23B                                           ;
-
-LDA #Message_GAME_OVER                                      ;inform the player that the game is, in fact, over
-JSR DrawMessage_D464                                        ;
-
-JSR QueueSFX_GameOverJingle_D544                            ;the game over noise before actual game over theme
-
-LDX #GameplayMode_InitGameOver                              ;
-LDA #$0C                                                    ;
-JMP StartTimedGameplayModeChange_C62E                       ;
-
-RoundBeatenAnimation_D33D:
-LDA Timer_2B
-BNE RETURN_D32A
-
-LDA #$10                                                    ;
-STA Timer_2B
-
-INC ShotCounterUpdateFlag                                   ;animate shot counter
-LDA ShotCounterUpdateFlag                                   ;
-CMP #$0F                                                    ;
-BNE CODE_D3AD                                               ;
-
-LDA CurrentHitCount                                         ;check if got perfect score 
-CMP #$0A                                                    ;
-BNE CODE_D399                                               ;if not, moving on
-
-JSR QueueSFX_PerfectJingle_D538                             ;hooray!
-
-LDA CurrentRound                                            ;what round are we in?
-LDX #$00                                                    ;
-CMP #$11                                                    ;10 and less?
-BCC CODE_D369                                               ;
-
-INX                                                         ;
-CMP #$16                                                    ;round 15 and less
-BCC CODE_D369                                               ;
-
-INX                                                         ;
-CMP #$21                                                    ;round 20 and less
-BCC CODE_D369                                               ;
-
-INX                                                         ;the highest reward
-
-CODE_D369:
-LDA PerfectScore_TensThousands_EBE9,X                       ;
-STA $05                                                     ;
-STA $0C                                                     ;
-
-LDA PerfectScore_Thousands_EBED,X                           ;
-STA $06                                                     ;
-LSR A                                                       ;
-LSR A                                                       ;
-LSR A                                                       ;
-LSR A                                                       ;
-STA $0D                                                     ;
-
-LDA #$00                                                    ;
-STA $04                                                     ;
-STA $07                                                     ;
-
-LDA #$0F                                                    ;
-JSR UpdateScore_C437                                        ;
-JSR PutScoreIntoBuffer_C655                                 ;
-
-LDA #$03
-STA RoundEndState
-
-LDA #$A0
-STA Timer_2B
-
-JSR ClearOAM_C23B                                           ;
-
-LDA #Message_PERFECT                                        ;
-JMP DrawMessage_D464                                        ;
-
-CODE_D399:
-LDA #$00
-
-CODE_D39B:
-LDX #GameplayMode_InitDuckGame                              ;
-LDY SelectedGame                                            ;
-CPY #$02                                                    ;
-BNE CODE_D3A5                                               ;
-
-LDX #GameplayMode_InitClayShooting                          ;
-
-CODE_D3A5:
-JSR StartTimedGameplayModeChange_C62E                       ;
-
-LDA #Message_None                                           ;remove the message
-JMP DrawMessage_D464                                        ;
-
-CODE_D3AD:
-AND #$01
-BNE CODE_D3B4
-
-JMP DrawHitTable_C6CC
-
-CODE_D3B4:
-LDX #$09
-
-LDA #BGTile_Duck+1
-LDY SelectedGame
-CPY #$02
-BNE CODE_D3C0
-
-LDA #BGTile_ClayPigeon+1
-
-CODE_D3C0:
-STA BGTileBuffer_Transfer+1,X
-DEX
-BPL CODE_D3C0
-JMP CODE_C6E9
-
-WaitAfterPerfect_D3C9:
-LDA Timer_2B
-BNE RETURN_D3D1                                             ;
-
-LDA #$04
-BNE CODE_D39B
-
-RETURN_D3D1:
-RTS                                                         ;
-
-;Animate current duck/clay pigeon icon on the hit table. the icon will blink until target is shot
-HandleHitTableIconAnimation_D3D2:
-LDA DuckPaletteLoadFlag                                     ;currently loading palette for ducks...
-BNE RETURN_D427                                             ;nothing happens.
-
-INC HitTableIconBlinkTimer                                  ;
-
-LDY #Entity_Variables_Size*0                                ;first entity
-JSR CODE_D3DF
-
-LDY #Entity_Variables_Size*1                                ;second entity
-
-CODE_D3DF:
-LDA Entity_Variables_ActiveFlag,Y                           ;
-BEQ RETURN_D427                                             ;if duck/clay pigeon does not exist, quit
-
-LDA Entity_Variables_CurrentState,Y
-CMP #$03
-BEQ CODE_D3FB                                               ;if flying, blink hit icon
-CMP #$08
-BNE RETURN_D427
-
-LDX $030B,Y
-LDA HitTable-1,X
-BEQ CODE_D409
-
-LDX #BGTile_ClayPigeon
-BNE CODE_D40B
-
-CODE_D3FB:
-LDA HitTableIconBlinkTimer
-AND #$0F
-BNE RETURN_D427
-
-LDX #$B7
-LDA HitTableIconBlinkTimer
-AND #$10
-BEQ CODE_D413
-
-CODE_D409:
-LDX #BGTile_ClayPigeon+1
-
-CODE_D40B:
-LDA SelectedGame                                            ;check if we're in clay pigeon game
-CMP #$02                                                    ;
-BEQ CODE_D413                                               ;
-INX                                                         ;offset tiles so that they are duck icons
-INX                                                         ;
-
-CODE_D413:
-STX BGTileBuffer_Transfer+1
-
-LDX #$11                                                    ;a single tile update
-STX BGTileBuffer_Transfer
-
-LDA $030B,Y
-CLC
-ADC #$4B
-TAX
-LDY #$23
-JMP TransferBGWriteToBuffer_C71D
-
-RETURN_D427:
 RTS
 
-;this code is used to blink the shot counter when all bullets have been used
-HandleShotCounterBlinkAnimation_D428:
-LDA ZapperFunctionsEnabledFlag                              ;
-BEQ RETURN_D427                                             ;
 
-LDA ShotCount                                               ;
-BNE RETURN_D427                                             ;
 
-LDA ShotCounterBlinkTimer                                   ;
-AND #$07                                                    ;
-BNE CODE_D461                                               ;
 
-LDA DuckPaletteLoadFlag                                     ;if we're set to load duck colors, don't update shot counter image
-BNE RETURN_D427
 
-LDA ShotCounterBlinkTimer                                   ;
-AND #$08                                                    ;every 8 frames alternate between showing shot counter and not showing it.
-BEQ DrawSHOT_D446                                           ;
 
-LDA #$B7                                                    ;this removes shot count
-TAX                                                         ;
-TAY                                                         ;
-BNE CODE_D44C                                               ;
 
-DrawSHOT_D446:
-LDA #BGTile_SHOT                                            ;this plasters shot counter
-LDX #BGTile_SHOT+1                                          ;
-LDY #BGTile_SHOT+2                                          ;
 
-CODE_D44C:
-STA BGTileBuffer_Transfer+1                                 ;
-STX BGTileBuffer_Transfer+2                                 ;
-STY BGTileBuffer_Transfer+3                                 ;
 
-LDA #$13                                                    ;3 tiles on a single row
-STA BGTileBuffer_Transfer                                   ;
 
-LDX #$63                                                    ;
-LDY #$23                                                    ;$2363 is where shot counter's at
-JSR TransferBGWriteToBuffer_C71D
 
-CODE_D461:
-INC ShotCounterBlinkTimer                                   ;
-RTS                                                         ;
 
-;update the screen with a message or something
-DrawMessage_D464:
-PHA                                                         ;
-JSR WaitForNMI_C5D9                                         ;
-JSR SoundEngine_F56C                                        ;make sure sound plays properly because we just stalled
-PLA                                                         ;
 
-CODE_D46C:
-STA $1B                                                     ;
-BEQ CODE_D4BC                                               ;if message box value is 0, remove it.
-ASL A                                                       ;
-TAX                                                         ;
-LDA MessageTilemapPointers_EC3A-2,X                         ;
-STA $14                                                     ;
+RoundBeatenAnimation_D33D:
 
-LDA MessageTilemapPointers_EC3A-1,X                         ;
-STA $15                                                     ;
 
-LDY #$01                                                    ;
-LDA ($14),Y                                                 ;
-STA $0F                                                     ;amount of tiles to transfer
 
-LDX #$00                                                    ;
-INY                                                         ;
 
-CODE_D485:
-LDA ($14),Y                                                 ;
-STA BGTileBuffer_Transfer,X                                 ;
-INY                                                         ;
-INX                                                         ;
-DEC $0F                                                     ;
-BNE CODE_D485                                               ;
 
-LDA $1B                                                     ;check what message we just displayed.
-CMP #$01                                                    ;is it ROUND?
-BNE CODE_D4AB                                               ;
 
-LDA CurrentRound                                            ;
-LSR A                                                       ;
-LSR A                                                       ;
-LSR A                                                       ;
-LSR A                                                       ;
-BEQ CODE_D4A1                                               ;
-STA BGTileBuffer_Transfer+24                                ;will draw round number, tens
 
-CODE_D4A1:
-LDA CurrentRound                                            ;
-AND #$0F                                                    ;
-STA BGTileBuffer_Transfer+25                                ;round number, ones
-JMP CODE_D4CF                                               ;
 
-CODE_D4AB:
-CMP #$05                                                    ;check if we're drawing "perfect!!"
-BNE CODE_D4CF
 
-LDA $0C                                                     ;score we're giving for that
-STA BGTileBuffer_Transfer+33                                ;
 
-LDA $0D                                                     ;
-STA BGTileBuffer_Transfer+34                                ;
-JMP CODE_D4CF                                               ;
 
-CODE_D4BC:
-LDX #68                                                     ;69 tiles (0 inclusive)
-LDA #$24                                                    ;blank tile
 
-CODE_D4C0:
-STA BGTileBuffer_Transfer+1,X                               ;
-DEX                                                         ;
-BPL CODE_D4C0                                               ;
 
-LDA #$6B                                                    ;6 rows with 11 tiles on each
-STA BGTileBuffer_Transfer                                   ;
 
-LDX #$CB                                                    ;
-BNE CODE_D4D4                                               ;
 
-CODE_D4CF:
-LDY #$00                                                    ;
-LDA ($14),Y                                                 ;VRAM location low byte
-TAX                                                         ;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+WaitAfterPerfect_D3C9:
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 CODE_D4D4:
-LDY #$20                                                    ;the message will always be in the range $2000-$20FF
-JMP TransferBGWriteToBuffer_C71D                            ;
+
+
 
 InitVariablesAndOAM_D4D9:
-JSR ClearOAM_C23B
-JSR ClearZeroPageVariablesLimited_C64B
-JMP Clear0300Page_C637                                      ;honestly, could've just pasted the routine right after, seeing as it's only called once
+
+
+
 
 QueueSFX_Silence_D4E2:
-LDA #SFX_Queue1_Silence
-BNE CODE_D500
+
+
 
 QueueSFX_ZapperShot_D4E6:
-LDA #SFX_Queue1_ZapperShot
-BNE CODE_D500
+
+
 
 QueueSFX_ClayPigeonHit_D4EA:
-LDA #SFX_Queue1_ClayPigeonHit
-BNE CODE_D500
+
+
 
 QueueSFX_WingFlag_D4EE:
-LDA #SFX_Queue1_WingFlap
-BNE CODE_D500
+
+
 
 QueueSFX_DuckFall_D4F2:
-LDA #SFX_Queue1_DuckFall
-BNE CODE_D500
+
+
 
 QueueSFX_ClayPigeonFall_D4F6:
-LDA #SFX_Queue1_ClayPigeonFall
-BNE CODE_D500
+
+
 
 QueueSFX_DogLaugh_D4FA:
-LDA #SFX_Queue1_DogLaugh
-BNE CODE_D500
+
+
 
 CODE_D4FE:
-LDA #%10000000
+
 
 CODE_D500:
-ORA Sound_SFX1Queue
-STA Sound_SFX1Queue
+
+
 RTS
 
 QueueSFX_ClayShootingStartTheme_D505:
-LDA #SFX_Queue2_ClayShootingStartTheme
-BNE CODE_D523
+
+
 
 QueueSFX_TitleTheme_D509:
-LDA #SFX_Queue2_TitleTheme
-BNE CODE_D523
+
+
 
 ;game over song
 QueueSFX_GameOverTheme_D50D:
-LDA #SFX_Queue2_GameOverTheme
-BNE CODE_D523
+
+
 
 ;happy jingle when got a duck or two
 QueueSFX_GotDuckJingle_D511:
-LDA #SFX_Queue2_GotDuckJingle
-BNE CODE_D523
+
+
 
 QueueSFX_DuckGameStartTheme_D515:
-LDA #SFX_Queue2_DuckGameStartTheme
-BNE CODE_D523
+
+
 
 ;shuffle sfx
 QueueSFX_DuckGameStartTheme_D519:
-LDA #SFX_Queue2_HitTableShuffle
-BNE CODE_D523
+
+
 
 QueueSFX_BeatRoundTheme_D51D:
-LDA #SFX_Queue2_BeatRoundTheme
-BNE CODE_D523
+
+
 
 QueueSFX_PauseJingle_D521:
-LDA #SFX_Queue2_PauseJingle
+
 
 CODE_D523:
-ORA Sound_SFX2Queue
-STA Sound_SFX2Queue
+
+
 RTS
 
 QueueSFX_Bark_D528:
-LDA #SFX_Queue3_Bark
-BNE CODE_D546
+
+
 
 QueueSFX_Quack_D52C:
-LDA #SFX_Queue3_Quack
-BNE CODE_D546
 
-LDA #%00000100                                              ;unused
-BNE CODE_D546
+
+
+
+
 
 QueueSFX_GroundThud_D534:
-LDA #SFX_Queue3_GroundThud
-BNE CODE_D546
+
+
 
 QueueSFX_PerfectJingle_D538:
-LDA #SFX_Queue3_PerfectJingle
-BNE CODE_D546
+
+
 
 QueueSFX_ClayPigeonThrow_D53C:
-LDA #SFX_Queue3_ClayPigeonThrow
-BNE CODE_D546
 
-LDA #%01000000                                              ;unused
-BNE CODE_D546
+
+
+
+
 
 QueueSFX_GameOverJingle_D544:
-LDA #SFX_Queue3_GameOverJingle
+
 
 CODE_D546:
-ORA Sound_SFX3Queue
-STA Sound_SFX3Queue
+
+
 RTS
 
 LoadClayShooting_D54B:
-JSR WaitForNMI_C5D9
+
 
 DrawStripeImage Layout_ClayShooting_E26C
 
-LDA #LoadPalette_ClayShooting
-STA PaletteToLoad
 
-LDA #$00
-STA $9D
 
-LDA #GameplayMode_InitClayShooting                          ;
-STA GameplayMode                                            ;
 
-JSR UpdateCameraPosition_C3C1
-JSR EnableRender_C5EE
-JMP QueueSFX_ClayShootingStartTheme_D505
+
+
+
+
+
+
+
+
+
 
 InitClayShooting_D56A
-JSR InitVariablesAndOAM_D4D9
-JSR SetRequiredAmountOfHitsAndSummonDog_D2A4
-JSR UpdateRequiredHits_C793
-JSR UpdateRoundNumber_C7B3
-JSR WaitForNMI_C5D9
-JSR SoundEngine_F56C
 
-LDA #$01                                                    ;draw
-STA ShotCounterUpdateFlag
 
-LDA #$03                                                    ;three bullets
-STA ShotCount                                               ;
 
-JSR HandleBulletVisualUpdate_C6F5                           ;gotta draw 'em all
-JSR DrawHitTable_C6CC
 
-LDA #$06
-STA $9D
 
-LDA #GameplayMode_ClayShootingIntro                         ;
-STA GameplayMode                                            ;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 RTS                                                         ;
 
 ;even MORE init!!
 InitClayShootingPart2_D593:
-LDA #$01                                                    ;
-STA Entity_Variables_ActiveFlag+(Entity_Variables_Size*0)   ;enable pigeons made out of clay
-STA Entity_Variables_ActiveFlag+(Entity_Variables_Size*1)   ;
-STA Entity_Variables_CurrentState+(Entity_Variables_Size*0) ;
-STA Entity_Variables_CurrentState+(Entity_Variables_Size*1) ;
 
-LDA #$30
 
-LDX CurrentRound
-CPX #$10
-BCS CODE_D5AD
-DEX
 
-LDA DATA_EC17,X
+
+
+
+
+
+
+
+
+
+
+
 
 CODE_D5AD:
-STA $A8                                                     ;I am guessing this is the speed of clay pigeons
 
-LDA #$80
-STA $A6
 
-LDA #$01                                                    ;
-STA ShotCounterUpdateFlag                                   ;you guessed it, will draw the bullets
 
-LDA #$03                                                    ;
-STA ShotCount                                               ;
 
-LDA #$02
-STA $BC
 
-LDA #$00                                                    ;
-STA ZapperEnabledFlag                                       ;
-STA ZapperFunctionsEnabledFlag                              ;
-STA CurrentShotDuckCount                                    ;sure...
 
-JSR HandleBulletVisualUpdate_C6F5
-JSR DrawHitTable_C6CC
 
-LDA #GameplayMode_ClayShootingMain                          ;
-STA GameplayMode                                            ;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 RTS                                                         ;
 
 CODE_D5D2:
-JSR HandleZapperInput_D131
-JSR HandleZapperFunctions_D160
-JSR HandleClayPigeons_D5EE
-JSR HandleBulletVisualUpdate_C6F5
-JSR HandleHitTableIconAnimation_D3D2
-JSR HandleHitTableVisualUpdate_C6C4
-JSR HandleScoreSprites_CFBA
-JSR HandleShotCounterBlinkAnimation_D428
 
-NOP                                                         ;three NOPs again! very curious...
-NOP                                                         ;
-NOP                                                         ;
+
+
+
+
+
+
+
+
+
+
+
 RTS                                                         ;
 
 
 HandleClayPigeons_D5EE:
-LDA Entity_Variables_ActiveFlag+(Entity_Variables_Size*0)
-BEQ CODE_D600
 
-LDY #Entity_Variables_Size*0
-STY CurrentEntity_Slot
-JSR GetCurrentEntityVariables_C5F7
-JSR ExecuteClayPigeonCode_D652
-JSR UpdateEntityVariables_C607
+
+
+
+
+
+
+
 
 CODE_D600:
-LDA Entity_Variables_ActiveFlag+(Entity_Variables_Size*1)
-BEQ CODE_D612
 
-LDY #Entity_Variables_Size*1
-INC CurrentEntity_Slot
-JSR GetCurrentEntityVariables_C5F7
-JSR ExecuteClayPigeonCode_D652
-JSR UpdateEntityVariables_C607
+
+
+
+
+
+
+
 
 CODE_D612:
-LDA $BC
-BNE CODE_D64B
 
-LDX Entity_Variables_CurrentState+(Entity_Variables_Size*0)
-LDY Entity_Variables_CurrentState+(Entity_Variables_Size*1)
-CPX #$03
-BEQ CODE_D627
-CPY #$03
-BEQ CODE_D627
-JSR CODE_D4FE
+
+
+
+
+
+
+
+
+
 
 CODE_D627:
-CPX #$00
-BNE RETURN_D651
-CPY #$00
-BNE RETURN_D651
 
-JSR DrawSHOT_D446
 
-LDA #$00
-STA ZapperFunctionsEnabledFlag
 
-LDA TargetEntityCount
-CMP #$0A
-BEQ CODE_D640
 
-LDA #GameplayMode_StartClayShooting
-BNE CODE_D646
+
+
+
+
+
+
+
+
+
+
+
+
 
 CODE_D640:
-LDA #$00                                                    ;
-STA RoundEndState                                           ;
 
-LDA #GameplayMode_RoundEnd_ClayShooting                     ;
+
+
+
 
 CODE_D646:
-STA GameplayMode
-JMP ClearOAM_C23B
+
+
 
 CODE_D64B:
-LDA $A6
-BEQ RETURN_D651
 
-DEC $A6
+
+
+
 
 RETURN_D651:
 RTS
 
 
 ExecuteClayPigeonCode_D652
-LDA CurrentEntity_State
-JSR ExecutePointers_C35E
+
+
 
 dw DoNothing_C5E0
 dw ClayPigeonEntity_Init_D669
@@ -4376,662 +4376,662 @@ dw DoNothing_C5E0                                           ;unused
 dw CODE_D7C5
 
 ClayPigeonEntity_Init_D669:
-LDX #$4F
+
 
 LOOP_D66B:
-LDA ClayPigeonEntity_InitialVariables_E8DA,X
-STA CurrentEntity_Variables,X
-DEX
-BPL LOOP_D66B
 
-LDA #$01
-STA $A7
+
+
+
+
+
+
 RTS
 
 CODE_D678:
-LDA $A6
-BNE CODE_D6D4
 
-LDA #$01                                                    ;
-STA ZapperFunctionsEnabledFlag                              ;can't shoot yet
 
-JSR RNG_C588
-AND #$3F
-TAY
-INY
-STY $A6
 
-JSR RNG_C588
-AND #$0F
-CMP $9C
-BNE CODE_D697
-CLC
-ADC #$01
-AND #$0F
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 CODE_D697:
-STA $9C
-ASL A
-STA $0C
-ASL A
-CLC
-ADC $0C                                                     ;times 6
-TAX
-LDA DATA_E968,X
-STA $44
 
-LDA DATA_E968+1,X
-STA $43
 
-LDA DATA_E968+2,X
-STA $4A
 
-LDA DATA_E968+3,X
-STA $42
 
-LDA DATA_E968+4,X
-STA $47
 
-LDA DATA_E968+5,X
-STA $4C
 
-INC TargetEntityCount
-LDA TargetEntityCount
-STA $3B
 
-DEC $BC
 
-LDA #$FF
-STA $5F
 
-JSR QueueSFX_ClayPigeonThrow_D53C
 
-LDA #$05
-STA $58
 
-INC CurrentEntity_State
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 CODE_D6D4:
 RTS
 
 CODE_D6D5:
-LDA $58
-BEQ CODE_D6E0
 
-DEC $58
-BNE CODE_D6E0
 
-JSR QueueSFX_ClayPigeonFall_D4F6
+
+
+
+
+
 
 CODE_D6E0:
-LDA $4C
-BMI CODE_D6EC
 
-LDA $49
-LSR A
-LSR A
-CMP #$07
-BCC CODE_D6EE
+
+
+
+
+
+
+
 
 CODE_D6EC:
-LDA #$07
+
 
 CODE_D6EE:
-CMP $5F
-BEQ CODE_D6FD
-STA $5F
-CLC
-ADC $A8
-TAX
-LDA DATA_E9C8,X
-STA $5E
+
+
+
+
+
+
+
+
 
 CODE_D6FD:
-JSR CODE_D81B
+
 
 CODE_D700:
-PHA
-JSR CODE_D8AE
-PLA
-SEC
-SBC #$01
-BNE CODE_D700
 
-LDA $4E
-BMI CODE_D74D
 
-LDA $49
-CMP #$30
-BCS CODE_D74D
-JSR CODE_D82F
 
-LDA CurrentEntity_YPos
-SEC
-SBC #$40
-STA CurrentEntity_YPos
 
-LDA $49
-LSR A
-TAX
-LDA DATA_E92A,X
-STA CurrentEntity_Image
-STX $0C
-SEC
-SBC #$18
-STA $56
 
-LDX CurrentRound
-LDA #$00
-CPX #$12
-BCC CODE_D73E
 
-LDA #$03
-CPX #$23
-BCC CODE_D73E
 
-LDA #$06
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 CODE_D73E:
-CLC
-ADC $0C
-TAX
-LDA ClayPigeonZapperShapes_E944,X
-STA CurrentEntity_ZapperShape
 
-JSR CODE_D805
-JMP SpriteDrawRoutine_D01B
+
+
+
+
+
+
+
 
 CODE_D74D:
-LDA #$08
-STA CurrentEntity_State
+
+
 RTS
 
 
 CODE_D752:
-LDX $3B
-LDA #$01
-STA HitTable-1,X
-STA $AD
 
-LDA $56
-ASL A
-ASL A
-TAX
-LDY #$00
+
+
+
+
+
+
+
+
+
 
 CODE_D762:
-LDA DATA_EAF2,X
-STA $0050,Y
-INX
-INY
-CPY #$04
-BNE CODE_D762
-LDA #$00
-STA $57
-LDX #$00
+
+
+
+
+
+
+
+
+
 
 CODE_D774:
-LDA CurrentEntity_YPos
-JSR CODE_DAA5
 
-LDA CurrentEntity_XPos
-JSR CODE_DAB5
-INX
-INX
-CPX #$20
-BNE CODE_D774
-JSR CODE_CF56
 
-LDX CurrentEntity_OAMStartPoint
-JSR ClearEntityOAM_D042
 
-INC CurrentEntity_State
+
+
+
+
+
+
+
+
+
+
+
+
 RTS
 
 CODE_D78F:
-JSR CODE_D805
-JSR CODE_D93A
 
-LDA CurrentEntity_OAMStartPoint
-STA CurrentOAMOffset
 
-LDY $50
-INY
-BEQ CODE_D7A7
 
-LDX #$00
-LDY #$0C
-LDA $54
-JSR CODE_D7CE
+
+
+
+
+
+
+
+
+
+
+
 
 CODE_D7A7:
-LDY $53
-INY
-BEQ CODE_D7B5
 
-LDX #$10
-LDY #$20
-LDA $55
-JSR CODE_D7CE
+
+
+
+
+
+
+
 
 CODE_D7B5:
-LDA $57
-CMP #$02
-BNE CODE_D7BE
 
-JSR QueueSFX_ClayPigeonHit_D4EA
+
+
+
+
 
 CODE_D7BE:
-LDA #$00
-STA $54
-STA $55
+
+
+
 RTS
 
 CODE_D7C5:
-LDA #$00
-STA CurrentEntity_State
 
-LDX CurrentEntity_OAMStartPoint
-JMP ClearEntityOAM_D042
+
+
+
+
 
 ;clay pigeon particle related
 CODE_D7CE:
-STA $0D
-STY $0C
-LDY CurrentOAMOffset
+
+
+
 
 CODE_D7D4:
-LDA $0D
-BNE CODE_D7DC
 
-LDA $60,X
-BNE CODE_D7E0
+
+
+
+
 
 CODE_D7DC:
-INX
-JMP CODE_D7F9
+
+
 
 CODE_D7E0:
-STA OAM_Y,Y
 
-INY
-LDA DATA_EA30,X
-STA OAM_Tile-1,Y
 
-INY
-INX
-LDA DATA_EA30,X
-STA OAM_Prop-2,Y
 
-INY
-LDA $60,X
-STA OAM_X-3,Y
-INY
+
+
+
+
+
+
+
+
+
+
+
+
 
 CODE_D7F9:
-INX
-CPX $0C
-BNE CODE_D7D4
-STY CurrentOAMOffset
-TYA
-TAX
-JMP ClearEntityOAM_D042
+
+
+
+
+
+
+
 
 
 CODE_D805:
-LDA $A7
-BEQ RETURN_D81A
 
-LDA #$00
-STA $A7
 
-LDX CurrentEntity_OAMStartPoint
-JSR ClearEntityOAM_D042
 
-LDA #$50
-STA CurrentEntity_OAMStartPoint
 
-LDA #$9F
-STA CurrentEntity_OAMEndPoint
+
+
+
+
+
+
+
+
+
+
 
 RETURN_D81A:
 RTS
 
 CODE_D81B:
-LDX $5E
-LDA DATA_EA00,X
-PHA
-INX
-TXA
-AND #$03
-BNE CODE_D82B
 
-DEX
-DEX
-DEX
-DEX
+
+
+
+
+
+
+
+
+
+
+
 
 CODE_D82B:
-STX $5E
-PLA
+
+
 RTS
 
 CODE_D82F:
-LDA $4D
-SEC
-SBC #$00
-TAY
 
-LDA $4E
-SBC #$10
-TAX
 
-LDA #$3B
-JSR CODE_D8DB
-STY $14
-STX $15
 
-LDA $4D
-SEC
-SBC #$00
-TAY
 
-LDA $4E
-SBC #$10
-TAX
 
-LDA #$E7
-JSR CODE_D8DB
-STY $12
-STX $13
 
-LDA $48
-SEC
-SBC #$00
-TAY
 
-LDA $49
-SBC #$18
-TAX
 
-LDA #$7F
-JSR CODE_D8DB
-CLC
-TYA
-ADC #$4F
-TAY
 
-TXA
-ADC #$23
-TAX
-TYA
-SEC
-SBC $14
-STA $93
 
-TXA
-SBC $15
-CMP #$50
-ROR A
-STA $94
 
-ROR $93
-LDY $91
-LDX $92
-LDA #$6C
-JSR CODE_D8DB
-CLC
-TYA
-ADC $12
-TAY
 
-TXA
-ADC $13
-TAX
-JSR CODE_D907
-SBC #$00
-EOR #$7F
-STA CurrentEntity_YPos
 
-LDA $43
-SEC
-SBC #$00
-TAY
 
-LDA $44
-SBC #$09
-TAX
-JSR CODE_D907
-EOR #$80
-STA CurrentEntity_XPos
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 RTS
 
 CODE_D8AE:
-LDA #$0F
+
 
 LOOP_D8B0:
-SEC
-SBC #$05
-TAX
-LDY #$00
-LDA $40,X
-BPL CODE_D8BB
-DEY
+
+
+
+
+
+
+
 
 CODE_D8BB:
-CLC
-ADC $41,X
-STA $41,X
-STA $15
-TYA
-LDY #$00
-ADC $42,X
-STA $42,X
-BPL CODE_D8CC
-DEY
+
+
+
+
+
+
+
+
+
+
 
 CODE_D8CC:
-ASL $15
-ADC $43,X
-STA $43,X
-TYA
-ADC $44,X
-STA $44,X
-TXA
-BNE LOOP_D8B0
+
+
+
+
+
+
+
+
 RTS
 
 
 CODE_D8DB:
-STY $10
-STX $11
-STA $95
 
-LDA #$00
-STA $96
-STA $97
 
-LDX #$08
+
+
+
+
+
+
+
 
 LOOP_D8E9:
-ROR $95
-BCC CODE_D8FA
-CLC
-LDA $96
-ADC $10
-STA $96
-LDA $97
-ADC $11
-STA $97
+
+
+
+
+
+
+
+
+
 
 CODE_D8FA:
-ASL A
-ROR $97
-ROR $96
-DEX
-BNE LOOP_D8E9
 
-LDY $96
-LDX $97
+
+
+
+
+
+
+
 RTS
 
 CODE_D907:
-STY $96
-STX $97
 
-LDA #$00
-STA $95
 
-LDX #$07
-CLC
-LDA $96
-ADC $93
-TAY
 
-LDA $97
-ADC $94
+
+
+
+
+
+
+
+
+
+
+
 
 LOOP_D91B:
-BCC CODE_D921
-STY $96
-STA $97
+
+
+
 
 CODE_D921:
-ROL $95
-ROL $96
-ROL $97
-SEC
-LDA $96
-SBC $93
-TAY
-LDA $97
-SBC $94
-DEX
-BPL LOOP_D91B
-BCS CODE_D937
-DEX
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 CODE_D937:
-LDA $95
+
 RTS
 
 CODE_D93A:
-INC $57
-LDY $50
-CPY #$FF
-BEQ CODE_D977
 
-INC $50
-LDA DATA_EA50,Y
-STA $0C
-STA $0F
-CMP #$AA
-BEQ CODE_D9B3
-CMP #$BB
-BEQ CODE_D9BA
 
-LDA $57
-CMP $51
-BEQ CODE_D9C7
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 CODE_D959:
-LDX #$00
+
 
 LOOP_D95B:
-STX $0D
-LDA DATA_EB22,X
-STA $0E
-TXA
-ASL A
-TAX
-LDA $60,X
-BEQ CODE_D970
-LDA $61,X
-BEQ CODE_D970
-JSR CODE_D9F6
+
+
+
+
+
+
+
+
+
+
+
 
 CODE_D970:
-LDX $0D
-INX
-CPX #$06
-BNE LOOP_D95B
+
+
+
+
 
 CODE_D977:
-LDY $53
-CPY #$FF
-BEQ CODE_D9E2
 
-INC $53
 
-LDA DATA_EA8F,Y
-STA $0C
-CMP #$AA
-BEQ CODE_D9CE
-CMP #$BB
-BEQ CODE_D9D5
 
-LDA DATA_EAC2,Y
-STA $0F
+
+
+
+
+
+
+
+
+
+
+
+
 
 CODE_D991:
-LDX #$00
+
 
 LOOP_D993:
-STX $0D
-LDA DATA_EB28,X
-STA $0E
-TXA
-ASL A
-CLC
-ADC #$10
-TAX
-LDA $60,X
-BEQ CODE_D9AB
 
-LDA $61,X
-BEQ CODE_D9AB
-JSR CODE_D9F6
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 CODE_D9AB:
-LDX $0D
-INX
-CPX #$08
-BNE LOOP_D993
+
+
+
+
 RTS
 
 
 CODE_D9B3:
-LDA #$FF
-STA $50
-JMP CODE_D977
+
+
+
 
 CODE_D9BA:
-LDA #$01
-STA $54
 
-LDA #$00
-STA $0C
-STA $0F
-JMP CODE_D959
+
+
+
+
+
+
 
 CODE_D9C7:
-LDA $52
-STA $53
-JMP CODE_D959
+
+
+
 
 CODE_D9CE:
-LDA #$FF
-STA $53
-JMP CODE_D9E2
+
+
+
 
 CODE_D9D5:
-LDA #$01
-STA $55
 
-LDA #$00
-STA $0C
-STA $0F
-JMP CODE_D991
+
+
+
+
+
+
 
 CODE_D9E2:
 
