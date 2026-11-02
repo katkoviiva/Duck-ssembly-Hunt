@@ -1,3 +1,14 @@
+QueueSFX_PauseJingle_D521:
+	lda #SFX_Queue2_PauseJingle
+	jsr CODE_D523
+rts
+
+CODE_D523:
+	ora Sound_SFX2Queue
+	sta Sound_SFX2Queue
+rts
+
+
 ;pointers to sprite images
 POINTERS_DAC5:
 .word DATA_DB0F
